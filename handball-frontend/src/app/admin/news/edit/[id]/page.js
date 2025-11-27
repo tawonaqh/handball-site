@@ -41,7 +41,7 @@ export default function EditNewsPage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/news/${params.id}`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/news/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content })

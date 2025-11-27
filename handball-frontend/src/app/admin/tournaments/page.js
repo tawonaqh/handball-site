@@ -28,7 +28,7 @@ export default function AdminTournaments() {
     if (!confirm('Are you sure you want to delete this tournament?')) return;
     
     try {
-      await fetch(`http://localhost:8000/api/tournaments/${id}`, { 
+      await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/tournaments/${id}`, { 
         method: 'DELETE' 
       });
       setTournaments(tournaments.filter(t => t.id !== id));

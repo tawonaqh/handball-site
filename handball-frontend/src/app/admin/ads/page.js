@@ -36,6 +36,6 @@ export default async function AdminAds() {
 
 async function handleDelete(id) {
   if (!confirm('Are you sure you want to delete this ad?')) return;
-  await fetch(`http://localhost:8000/api/ads/${id}`, { method: 'DELETE' });
+  await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/ads/${id}`, { method: 'DELETE' });
   location.reload();
 }

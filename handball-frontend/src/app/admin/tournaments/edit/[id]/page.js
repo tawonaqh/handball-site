@@ -21,7 +21,7 @@ export default function EditTournamentPage() {
   useEffect(() => {
     async function loadTournament() {
       try {
-        const response = await fetch(`http://localhost:8000/api/tournaments/${id}`);
+        const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/tournaments/${id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch tournament');
         }
@@ -111,7 +111,7 @@ export default function EditTournamentPage() {
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/tournaments/${id}`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/tournaments/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

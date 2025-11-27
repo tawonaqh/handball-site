@@ -79,7 +79,7 @@ export default function TournamentForm({ tournament }) {
     try {
       const method = tournament ? 'PUT' : 'POST';
       const url = tournament
-        ? `http://localhost:8000/api/tournaments/${tournament.id}`
+        ? process.env.NEXT_PUBLIC_API_BASE_URL+`/tournaments/${tournament.id}`
         : 'http://localhost:8000/api/tournaments';
 
       const response = await fetch(url, {

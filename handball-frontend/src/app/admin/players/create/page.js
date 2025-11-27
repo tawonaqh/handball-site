@@ -108,7 +108,7 @@ export default function PlayerForm({ player }) {
     try {
       const method = player ? 'PUT' : 'POST';
       const url = player 
-        ? `http://localhost:8000/api/players/${player.id}`
+        ? process.env.NEXT_PUBLIC_API_BASE_URL+`/players/${player.id}`
         : 'http://localhost:8000/api/players';
 
       const response = await fetch(url, {

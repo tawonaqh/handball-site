@@ -41,7 +41,7 @@ export default function AdminGallery() {
     if (!confirm('Are you sure you want to delete this gallery item? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/gallery/${id}`, { 
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/gallery/${id}`, { 
         method: 'DELETE' 
       });
       

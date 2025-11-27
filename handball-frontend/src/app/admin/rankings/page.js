@@ -31,7 +31,7 @@ export default function AdminRankings() {
     if (!confirm('Are you sure you want to delete this ranking? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/rankings/${id}`, { 
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/rankings/${id}`, { 
         method: 'DELETE' 
       });
       

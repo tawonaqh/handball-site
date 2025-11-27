@@ -11,7 +11,7 @@ export default function GalleryForm({ item }) {
   async function handleSubmit(e) {
     e.preventDefault();
     const method = item ? 'PUT' : 'POST';
-    const url = item ? `http://localhost:8000/api/gallery/${item.id}` : 'http://localhost:8000/api/gallery';
+    const url = item ? process.env.NEXT_PUBLIC_API_BASE_URL+`/gallery/${item.id}` : 'http://localhost:8000/api/gallery';
 
     await fetch(url, {
       method,

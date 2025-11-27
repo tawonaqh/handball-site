@@ -31,7 +31,7 @@ export default function AdminReferees() {
     if (!confirm('Are you sure you want to delete this referee? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/referees/${id}`, { 
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/referees/${id}`, { 
         method: 'DELETE' 
       });
       

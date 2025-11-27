@@ -31,7 +31,7 @@ export default function AdminTeams() {
     if (!confirm('Are you sure you want to delete this team? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/teams/${id}`, { 
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/teams/${id}`, { 
         method: 'DELETE' 
       });
       

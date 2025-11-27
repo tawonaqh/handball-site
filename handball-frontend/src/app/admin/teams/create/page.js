@@ -86,7 +86,7 @@ export default function TeamForm({ team }) {
     try {
       const method = team ? 'PUT' : 'POST';
       const url = team 
-        ? `http://localhost:8000/api/teams/${team.id}`
+        ? process.env.NEXT_PUBLIC_API_BASE_URL+`/teams/${team.id}`
         : 'http://localhost:8000/api/teams';
 
       const response = await fetch(url, {

@@ -15,7 +15,7 @@ export default function NewsForm({ news }) {
 
     try {
       const method = news ? 'PUT' : 'POST';
-      const url = news ? `http://localhost:8000/api/news/${news.id}` : 'http://localhost:8000/api/news';
+      const url = news ? process.env.NEXT_PUBLIC_API_BASE_URL+`/news/${news.id}` : 'http://localhost:8000/api/news';
 
       const response = await fetch(url, {
         method,

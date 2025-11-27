@@ -11,7 +11,7 @@ export default function AdForm({ ad }) {
   async function handleSubmit(e) {
     e.preventDefault();
     const method = ad ? 'PUT' : 'POST';
-    const url = ad ? `http://localhost:8000/api/ads/${ad.id}` : 'http://localhost:8000/api/ads';
+    const url = ad ? process.env.NEXT_PUBLIC_API_BASE_URL+`/ads/${ad.id}` : 'http://localhost:8000/api/ads';
 
     await fetch(url, {
       method,

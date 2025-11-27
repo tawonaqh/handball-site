@@ -170,7 +170,7 @@ export default function GameForm({ game }) {
     try {
       const method = game ? 'PUT' : 'POST';
       const url = game 
-        ? `http://localhost:8000/api/games/${game.id}`
+        ? process.env.NEXT_PUBLIC_API_BASE_URL+`/games/${game.id}`
         : 'http://localhost:8000/api/games';
 
       const payload = {

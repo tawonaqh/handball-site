@@ -58,7 +58,7 @@ export default function EditGamePage() {
         setReferees(refereesData);
 
         // Then load game data
-        const gameResponse = await fetch(`http://localhost:8000/api/games/${id}`);
+        const gameResponse = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/games/${id}`);
         if (!gameResponse.ok) {
           throw new Error('Failed to fetch game');
         }
@@ -186,7 +186,7 @@ export default function EditGamePage() {
         referee_id: formData.referee_id ? parseInt(formData.referee_id) : null
       };
 
-      const response = await fetch(`http://localhost:8000/api/games/${id}`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/games/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

@@ -108,7 +108,7 @@ export default function RefereeForm({ referee }) {
     try {
       const method = referee ? 'PUT' : 'POST';
       const url = referee 
-        ? `http://localhost:8000/api/referees/${referee.id}`
+        ? process.env.NEXT_PUBLIC_API_BASE_URL+`/referees/${referee.id}`
         : 'http://localhost:8000/api/referees';
 
       const response = await fetch(url, {

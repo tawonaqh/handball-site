@@ -30,7 +30,7 @@ export default function EditLeaguePage() {
         setTournaments(tournamentsData);
 
         // Then load league data
-        const leagueResponse = await fetch(`http://localhost:8000/api/leagues/${id}`);
+        const leagueResponse = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/leagues/${id}`);
         if (!leagueResponse.ok) {
           throw new Error('Failed to fetch league');
         }
@@ -98,7 +98,7 @@ export default function EditLeaguePage() {
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/leagues/${id}`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/leagues/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -47,7 +47,7 @@ export default function EditRankingPage() {
         setTeams(teamsData);
 
         // Then load ranking data
-        const rankingResponse = await fetch(`http://localhost:8000/api/rankings/${id}`);
+        const rankingResponse = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/rankings/${id}`);
         if (!rankingResponse.ok) {
           throw new Error('Failed to fetch ranking');
         }
@@ -204,7 +204,7 @@ export default function EditRankingPage() {
         points: formData.points
       };
 
-      const response = await fetch(`http://localhost:8000/api/rankings/${id}`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/rankings/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

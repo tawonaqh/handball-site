@@ -30,7 +30,7 @@ export default function EditTeamPage() {
         setLeagues(leaguesData);
 
         // Then load team data
-        const teamResponse = await fetch(`http://localhost:8000/api/teams/${id}`);
+        const teamResponse = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/teams/${id}`);
         if (!teamResponse.ok) {
           throw new Error('Failed to fetch team');
         }
@@ -98,7 +98,7 @@ export default function EditTeamPage() {
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/teams/${id}`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL+`/teams/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
