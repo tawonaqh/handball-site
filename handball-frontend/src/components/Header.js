@@ -34,12 +34,12 @@ export default function Header() {
             <Image
               src="/img/logo.png"
               alt="Handball 263 Logo"
-              width={50}
-              height={50}
-              className="rounded-lg shadow-md"
+              width={40}
+              height={40}
+              className="rounded-lg"
               priority
             />
-            <span className="font-bold text-2xl tracking-tight">Handball 263</span>
+            <span className="font-bold text-xl tracking-tight">Handball 263</span>
           </Link>
 
           {/* Navigation */}
