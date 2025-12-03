@@ -1,3 +1,4 @@
+'use client'
 import { fetcher } from "@/lib/api";
 import Link from 'next/link';
 
