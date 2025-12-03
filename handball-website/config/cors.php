@@ -4,31 +4,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
+    | Laravel CORS Configuration
     |--------------------------------------------------------------------------
     |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    | This configuration allows your Laravel API to accept requests from
+    | your frontend domains, including localhost and deployed apps.
     |
     */
 
-    'paths' => ['*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
+    // Allow all HTTP methods
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    // Allowed frontend origins
+    'allowed_origins' => [
+        'http://localhost:3000',          // local development
+        'https://handball263.vercel.app', // Vercel production frontend
+    ],
 
-    'allowed_origins_patterns' => [],
+    // Optional: allow future Vercel deployments dynamically
+    'allowed_origins_patterns' => [
+        '/https:\/\/.*\.vercel\.app/',  // regex to match any Vercel preview URL
+        '/https:\/\/.*-handball263\.vercel\.app/', // Vercel branch deployments
+    ],
 
+    // Allow all headers
     'allowed_headers' => ['*'],
 
+    // Expose no extra headers
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    // Cache preflight response for 1 hour
+    'max_age' => 3600,
 
-    'supports_credentials' => true,
-
+    // Set to true if you plan to use cookies/auth in requests
+    'supports_credentials' => false,
 ];
