@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function GameForm({ game }) {
   const [formData, setFormData] = useState({
     league_id: '',
@@ -35,9 +37,9 @@ export default function GameForm({ game }) {
       try {
         // Load leagues, teams, and referees in parallel
         const [leaguesResponse, teamsResponse, refereesResponse] = await Promise.all([
-          fetch('http://localhost:8000/api/leagues'),
-          fetch('http://localhost:8000/api/teams'),
-          fetch('http://localhost:8000/api/referees') // Add referees API call
+          fetch(`${API_URL}/leagues`),
+          fetch(`${API_URL}/teams`),
+          fetch(`${API_URL}/referees`)
         ]);
 
         if (!leaguesResponse.ok || !teamsResponse.ok || !refereesResponse.ok) {
@@ -170,8 +172,8 @@ export default function GameForm({ game }) {
     try {
       const method = game ? 'PUT' : 'POST';
       const url = game 
-        ? `http://localhost:8000/api/games/${game.id}`
-        : 'http://localhost:8000/api/games';
+        ? `${API_URL}/games/${game.id}`
+        : `${API_URL}/games`;
 
       const payload = {
         league_id: formData.league_id ? parseInt(formData.league_id) : null,

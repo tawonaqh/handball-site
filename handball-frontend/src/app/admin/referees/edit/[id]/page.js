@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function EditRefereePage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -27,7 +29,7 @@ export default function EditRefereePage() {
         setLoading(true);
         
         // Load tournaments
-        const tournamentsResponse = await fetch('http://localhost:8000/api/tournaments');
+        const tournamentsResponse = await fetch(`${API_URL}/tournaments`);
         if (!tournamentsResponse.ok) {
           throw new Error('Failed to fetch tournaments');
         }
@@ -36,7 +38,7 @@ export default function EditRefereePage() {
         setTournamentsLoading(false);
 
         // Load referee data
-        const refereeResponse = await fetch(`http://localhost:8000/api/referees/${params.id}`);
+        const refereeResponse = await fetch(`${API_URL}/referees/${params.id}`);
         if (!refereeResponse.ok) {
           throw new Error('Failed to fetch referee');
         }
@@ -122,7 +124,7 @@ export default function EditRefereePage() {
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/referees/${params.id}`, {
+      const response = await fetch(`${API_URL}/referees/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

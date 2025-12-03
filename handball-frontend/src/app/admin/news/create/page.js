@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, FileText } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function NewsForm({ news }) {
   const [title, setTitle] = useState(news?.title || '');
   const [content, setContent] = useState(news?.content || '');
@@ -15,7 +17,7 @@ export default function NewsForm({ news }) {
 
     try {
       const method = news ? 'PUT' : 'POST';
-      const url = news ? `http://localhost:8000/api/news/${news.id}` : 'http://localhost:8000/api/news';
+      const url = news ? `${API_URL}/news/${news.id}` : `${API_URL}/news`;
 
       const response = await fetch(url, {
         method,

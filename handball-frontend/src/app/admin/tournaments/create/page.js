@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function TournamentForm({ tournament }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -79,8 +81,8 @@ export default function TournamentForm({ tournament }) {
     try {
       const method = tournament ? 'PUT' : 'POST';
       const url = tournament
-        ? `http://localhost:8000/api/tournaments/${tournament.id}`
-        : 'http://localhost:8000/api/tournaments';
+        ? `${API_URL}/tournaments/${tournament.id}`
+        : `${API_URL}/tournaments`;
 
       const response = await fetch(url, {
         method,

@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminReferees() {
   const [referees, setReferees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ export default function AdminReferees() {
   useEffect(() => {
     async function loadReferees() {
       try {
-        const response = await fetch('http://localhost:8000/api/referees');
+        const response = await fetch(`${API_URL}/referees`);
         if (!response.ok) {
           throw new Error('Failed to fetch referees');
         }
@@ -31,7 +33,7 @@ export default function AdminReferees() {
     if (!confirm('Are you sure you want to delete this referee? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/referees/${id}`, { 
+      const response = await fetch(`${API_URL}/referees/${id}`, { 
         method: 'DELETE' 
       });
       

@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdForm({ ad }) {
   const [title, setTitle] = useState(ad?.title || '');
   const [link, setLink] = useState(ad?.link || '');
@@ -11,7 +13,7 @@ export default function AdForm({ ad }) {
   async function handleSubmit(e) {
     e.preventDefault();
     const method = ad ? 'PUT' : 'POST';
-    const url = ad ? `http://localhost:8000/api/ads/${ad.id}` : 'http://localhost:8000/api/ads';
+    const url = ad ? `${API_URL}/ads/${ad.id}` : `${API_URL}/ads`;
 
     await fetch(url, {
       method,

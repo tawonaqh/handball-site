@@ -12,6 +12,8 @@ import {
   File
 } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminGallery() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function AdminGallery() {
   useEffect(() => {
     async function loadGallery() {
       try {
-        const response = await fetch('http://localhost:8000/api/gallery');
+        const response = await fetch(`${API_URL}/gallery`);
         if (!response.ok) {
           throw new Error('Failed to fetch gallery items');
         }
@@ -41,7 +43,7 @@ export default function AdminGallery() {
     if (!confirm('Are you sure you want to delete this gallery item? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/gallery/${id}`, { 
+      const response = await fetch(`${API_URL}/gallery/${id}`, { 
         method: 'DELETE' 
       });
       

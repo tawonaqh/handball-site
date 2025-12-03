@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function GalleryForm({ item }) {
   const [title, setTitle] = useState(item?.title || '');
   const [mediaType, setMediaType] = useState(item?.media_type || 'image');
@@ -11,7 +13,7 @@ export default function GalleryForm({ item }) {
   async function handleSubmit(e) {
     e.preventDefault();
     const method = item ? 'PUT' : 'POST';
-    const url = item ? `http://localhost:8000/api/gallery/${item.id}` : 'http://localhost:8000/api/gallery';
+    const url = item ? `${API_URL}/gallery/${item.id}` : `${API_URL}/gallery`;
 
     await fetch(url, {
       method,

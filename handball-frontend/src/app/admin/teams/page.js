@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminTeams() {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ export default function AdminTeams() {
   useEffect(() => {
     async function loadTeams() {
       try {
-        const response = await fetch('http://localhost:8000/api/teams');
+        const response = await fetch(`${API_URL}/teams`);
         if (!response.ok) {
           throw new Error('Failed to fetch teams');
         }
@@ -31,7 +33,7 @@ export default function AdminTeams() {
     if (!confirm('Are you sure you want to delete this team? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/teams/${id}`, { 
+      const response = await fetch(`${API_URL}/teams/${id}`, { 
         method: 'DELETE' 
       });
       

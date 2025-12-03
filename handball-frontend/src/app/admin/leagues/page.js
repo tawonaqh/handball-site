@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminLeagues() {
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ export default function AdminLeagues() {
   useEffect(() => {
     async function loadLeagues() {
       try {
-        const response = await fetch('http://localhost:8000/api/leagues');
+        const response = await fetch(`${API_URL}/leagues`);
         if (!response.ok) {
           throw new Error('Failed to fetch leagues');
         }
@@ -31,7 +33,7 @@ export default function AdminLeagues() {
     if (!confirm('Are you sure you want to delete this league? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/leagues/${id}`, { 
+      const response = await fetch(`${API_URL}/leagues/${id}`, { 
         method: 'DELETE' 
       });
       

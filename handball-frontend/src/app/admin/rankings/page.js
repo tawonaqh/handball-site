@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminRankings() {
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ export default function AdminRankings() {
   useEffect(() => {
     async function loadRankings() {
       try {
-        const response = await fetch('http://localhost:8000/api/rankings');
+        const response = await fetch(`${API_URL}/rankings`);
         if (!response.ok) {
           throw new Error('Failed to fetch rankings');
         }
@@ -31,7 +33,7 @@ export default function AdminRankings() {
     if (!confirm('Are you sure you want to delete this ranking? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/rankings/${id}`, { 
+      const response = await fetch(`${API_URL}/rankings/${id}`, { 
         method: 'DELETE' 
       });
       

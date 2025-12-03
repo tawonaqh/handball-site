@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function EditRankingPage() {
   const params = useParams();
   const router = useRouter();
@@ -32,8 +34,8 @@ export default function EditRankingPage() {
       try {
         // Load leagues and teams in parallel
         const [leaguesResponse, teamsResponse] = await Promise.all([
-          fetch('http://localhost:8000/api/leagues'),
-          fetch('http://localhost:8000/api/teams')
+          fetch(`${API_URL}/leagues`),
+          fetch(`${API_URL}/teams`)
         ]);
 
         if (!leaguesResponse.ok || !teamsResponse.ok) {
@@ -47,7 +49,7 @@ export default function EditRankingPage() {
         setTeams(teamsData);
 
         // Then load ranking data
-        const rankingResponse = await fetch(`http://localhost:8000/api/rankings/${id}`);
+        const rankingResponse = await fetch(`${API_URL}/rankings/${id}`);
         if (!rankingResponse.ok) {
           throw new Error('Failed to fetch ranking');
         }
@@ -204,7 +206,7 @@ export default function EditRankingPage() {
         points: formData.points
       };
 
-      const response = await fetch(`http://localhost:8000/api/rankings/${id}`, {
+      const response = await fetch(`${API_URL}/rankings/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

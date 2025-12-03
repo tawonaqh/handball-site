@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function EditPlayerPage() {
   const params = useParams();
   const router = useRouter();
@@ -27,7 +29,7 @@ export default function EditPlayerPage() {
     async function loadData() {
       try {
         // Load teams first
-        const teamsResponse = await fetch('http://localhost:8000/api/teams');
+        const teamsResponse = await fetch(`${API_URL}/teams`);
         if (!teamsResponse.ok) {
           throw new Error('Failed to fetch teams');
         }
@@ -35,7 +37,7 @@ export default function EditPlayerPage() {
         setTeams(teamsData);
 
         // Then load player data
-        const playerResponse = await fetch(`http://localhost:8000/api/players/${id}`);
+        const playerResponse = await fetch(`${API_URL}/players/${id}`);
         if (!playerResponse.ok) {
           throw new Error('Failed to fetch player');
         }
@@ -120,7 +122,7 @@ export default function EditPlayerPage() {
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/players/${id}`, {
+      const response = await fetch(`${API_URL}/players/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

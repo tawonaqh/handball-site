@@ -4,6 +4,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, FileText, Loader } from 'lucide-react';
 import { fetcher } from '@/lib/api';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function EditNewsPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -41,7 +43,7 @@ export default function EditNewsPage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/news/${params.id}`, {
+      const response = await fetch(`${API_URL}/news/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content })

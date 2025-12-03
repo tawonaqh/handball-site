@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetcher } from '@/lib/api';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminTournaments() {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ export default function AdminTournaments() {
     if (!confirm('Are you sure you want to delete this tournament?')) return;
     
     try {
-      await fetch(`http://localhost:8000/api/tournaments/${id}`, { 
+      await fetch(`${API_URL}/tournaments/${id}`, { 
         method: 'DELETE' 
       });
       setTournaments(tournaments.filter(t => t.id !== id));

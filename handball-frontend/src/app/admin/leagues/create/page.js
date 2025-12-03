@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function CreateLeaguePage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -17,7 +19,7 @@ export default function CreateLeaguePage() {
   useEffect(() => {
     async function loadTournaments() {
       try {
-        const response = await fetch('http://localhost:8000/api/tournaments');
+        const response = await fetch(`${API_URL}/tournaments`);
         if (!response.ok) {
           throw new Error('Failed to fetch tournaments');
         }
@@ -77,7 +79,7 @@ export default function CreateLeaguePage() {
     setErrors({});
 
     try {
-      const response = await fetch('http://localhost:8000/api/leagues', {
+      const response = await fetch(`${API_URL}/leagues`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

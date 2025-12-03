@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function RefereeForm({ referee }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -21,7 +23,7 @@ export default function RefereeForm({ referee }) {
   useEffect(() => {
     async function loadTournaments() {
       try {
-        const response = await fetch('http://localhost:8000/api/tournaments');
+        const response = await fetch(`${API_URL}/tournaments`);
         if (!response.ok) {
           throw new Error('Failed to fetch tournaments');
         }
@@ -108,8 +110,8 @@ export default function RefereeForm({ referee }) {
     try {
       const method = referee ? 'PUT' : 'POST';
       const url = referee 
-        ? `http://localhost:8000/api/referees/${referee.id}`
-        : 'http://localhost:8000/api/referees';
+        ? `${API_URL}/referees/${referee.id}`
+        : `${API_URL}/referees`;
 
       const response = await fetch(url, {
         method,

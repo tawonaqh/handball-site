@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function EditGamePage() {
   const params = useParams();
   const router = useRouter();
@@ -40,9 +42,9 @@ export default function EditGamePage() {
       try {
         // Load leagues, teams, and referees in parallel
         const [leaguesResponse, teamsResponse, refereesResponse] = await Promise.all([
-          fetch('http://localhost:8000/api/leagues'),
-          fetch('http://localhost:8000/api/teams'),
-          fetch('http://localhost:8000/api/referees')
+          fetch(`${API_URL}/leagues`),
+          fetch(`${API_URL}/teams`),
+          fetch(`${API_URL}/referees`)
         ]);
 
         if (!leaguesResponse.ok || !teamsResponse.ok || !refereesResponse.ok) {
@@ -58,7 +60,7 @@ export default function EditGamePage() {
         setReferees(refereesData);
 
         // Then load game data
-        const gameResponse = await fetch(`http://localhost:8000/api/games/${id}`);
+        const gameResponse = await fetch(`${API_URL}/games/${id}`);
         if (!gameResponse.ok) {
           throw new Error('Failed to fetch game');
         }
@@ -186,7 +188,7 @@ export default function EditGamePage() {
         referee_id: formData.referee_id ? parseInt(formData.referee_id) : null
       };
 
-      const response = await fetch(`http://localhost:8000/api/games/${id}`, {
+      const response = await fetch(`${API_URL}/games/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

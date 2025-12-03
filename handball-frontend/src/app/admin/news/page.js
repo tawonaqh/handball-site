@@ -15,6 +15,8 @@ import {
   Search
 } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function AdminNews() {
   const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export default function AdminNews() {
     if (!confirm('Are you sure you want to delete this news article? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/news/${id}`, { 
+      const response = await fetch(`${API_URL}/news/${id}`, { 
         method: 'DELETE' 
       });
       

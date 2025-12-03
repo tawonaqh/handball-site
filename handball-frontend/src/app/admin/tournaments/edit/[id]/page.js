@@ -1,51 +1,29 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function EditTournamentPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params.id;
-  const [tournament, setTournament] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState({});
-  
-  // Form state
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
+export default function TournamentForm({ tournament }) {
   const [formData, setFormData] = useState({
     name: '',
     startDate: '',
     endDate: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const router = useRouter();
 
+  // Initialize form with tournament data
   useEffect(() => {
-    async function loadTournament() {
-      try {
-        const response = await fetch(`http://localhost:8000/api/tournaments/${id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch tournament');
-        }
-        const data = await response.json();
-        setTournament(data);
-        
-        // Populate form fields
-        setFormData({
-          name: data.name || '',
-          startDate: data.start_date ? data.start_date.slice(0, 10) : '',
-          endDate: data.end_date ? data.end_date.slice(0, 10) : ''
-        });
-      } catch (error) {
-        console.error('Error loading tournament:', error);
-        setErrors({ load: 'Failed to load tournament data' });
-      } finally {
-        setLoading(false);
-      }
+    if (tournament) {
+      setFormData({
+        name: tournament.name || '',
+        startDate: tournament.start_date ? tournament.start_date.slice(0, 10) : '',
+        endDate: tournament.end_date ? tournament.end_date.slice(0, 10) : ''
+      });
     }
-    
-    if (id) {
-      loadTournament();
-    }
-  }, [id]);
+  }, [tournament]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -107,12 +85,17 @@ export default function EditTournamentPage() {
       return;
     }
 
-    setSaving(true);
+    setLoading(true);
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/tournaments/${id}`, {
-        method: 'PUT',
+      const method = tournament ? 'PUT' : 'POST';
+      const url = tournament
+        ? `${API_URL}/tournaments/${tournament.id}`
+        : `${API_URL}/tournaments`;
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name.trim(),
@@ -123,78 +106,47 @@ export default function EditTournamentPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to update tournament');
+        throw new Error(errorData.message || `Failed to ${tournament ? 'update' : 'create'} tournament`);
       }
 
-      // Success - redirect to tournaments list
       router.push('/admin/tournaments');
-      router.refresh();
+      router.refresh(); // Refresh the current route
 
     } catch (error) {
-      console.error('Error updating tournament:', error);
-      setErrors({ submit: error.message || 'An error occurred while updating the tournament' });
+      console.error('Error saving tournament:', error);
+      setErrors({ submit: error.message || 'Something went wrong. Please try again.' });
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading tournament data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tournament) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Tournament Not Found</h2>
-          <p className="text-gray-600 mb-6">
-            {errors.load || 'The tournament you are looking for does not exist or has been removed.'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => router.push('/admin/tournaments')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-            >
-              Back to Tournaments
-            </button>
-            <button
-              onClick={() => router.push('/admin/dashboard')}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-            >
-              Dashboard Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleCancel = () => {
+    router.push('/admin/tournaments');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         {/* Header Card */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Tournament</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {tournament ? 'Edit Tournament' : 'Create New Tournament'}
+              </h1>
               <p className="text-gray-600">
-                Update the details for <span className="font-semibold text-blue-600">{tournament.name}</span>
+                {tournament 
+                  ? 'Update your tournament details below' 
+                  : 'Fill in the details to create a new tournament'
+                }
               </p>
             </div>
             <button
               onClick={() => router.push('/admin/dashboard')}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 w-full sm:w-auto"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
             >
               <span>🏠</span>
-              <span>Dashboard Home</span>
+              <span>Dashboard</span>
             </button>
           </div>
         </div>
@@ -216,12 +168,12 @@ export default function EditTournamentPage() {
                   errors.name 
                     ? 'border-red-500 focus:ring-red-200' 
                     : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
-                } ${saving ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                } ${loading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="Enter tournament name"
-                disabled={saving}
+                disabled={loading}
               />
               {errors.name && (
-                <p className="mt-2 text-sm text-red-600 flex items-center space-x-2">
+                <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
                   <span>⚠️</span>
                   <span>{errors.name}</span>
                 </p>
@@ -244,11 +196,11 @@ export default function EditTournamentPage() {
                     errors.startDate 
                       ? 'border-red-500 focus:ring-red-200' 
                       : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
-                  } ${saving ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  disabled={saving}
+                  } ${loading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  disabled={loading}
                 />
                 {errors.startDate && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center space-x-2">
+                  <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
                     <span>⚠️</span>
                     <span>{errors.startDate}</span>
                   </p>
@@ -269,11 +221,11 @@ export default function EditTournamentPage() {
                     errors.endDate 
                       ? 'border-red-500 focus:ring-red-200' 
                       : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
-                  } ${saving ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  disabled={saving}
+                  } ${loading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  disabled={loading}
                 />
                 {errors.endDate && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center space-x-2">
+                  <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
                     <span>⚠️</span>
                     <span>{errors.endDate}</span>
                   </p>
@@ -281,24 +233,26 @@ export default function EditTournamentPage() {
               </div>
             </div>
 
-            {/* Original Dates Info */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Original Dates</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Start:</span>{' '}
-                  <span className="font-medium text-gray-600">
-                    {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'Not set'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">End:</span>{' '}
-                  <span className="font-medium text-gray-600">
-                    {tournament.end_date ? new Date(tournament.end_date).toLocaleDateString() : 'Not set'}
-                  </span>
+            {/* Original Dates Info (only for edit mode) */}
+            {tournament && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Original Dates</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Start:</span>{' '}
+                    <span className="font-medium text-gray-600">
+                      {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'Not set'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">End:</span>{' '}
+                    <span className="font-medium text-gray-600">
+                      {tournament.end_date ? new Date(tournament.end_date).toLocaleDateString() : 'Not set'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Submit Error */}
             {errors.submit && (
@@ -314,31 +268,44 @@ export default function EditTournamentPage() {
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
                 type="submit"
-                disabled={saving}
+                disabled={loading}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-6 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
               >
-                {saving ? (
+                {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Updating Tournament...</span>
+                    <span>{tournament ? 'Updating...' : 'Creating...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>💾</span>
-                    <span>Update Tournament</span>
+                    <span>{tournament ? '💾' : '✨'}</span>
+                    <span>{tournament ? 'Update Tournament' : 'Create Tournament'}</span>
                   </>
                 )}
               </button>
               
               <button
                 type="button"
-                onClick={() => router.push('/admin/tournaments')}
-                disabled={saving}
+                onClick={handleCancel}
+                disabled={loading}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
               >
                 <span>↩️</span>
-                <span>Back to List</span>
+                <span>{tournament ? 'Back to List' : 'Cancel'}</span>
               </button>
+            </div>
+
+            {/* Form Tips */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+              <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center space-x-1">
+                <span>💡</span>
+                <span>Quick Tips</span>
+              </h3>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Choose a descriptive name that players will recognize</li>
+                <li>• Ensure the end date is after the start date</li>
+                <li>• Consider tournament duration when setting dates</li>
+              </ul>
             </div>
           </form>
         </div>

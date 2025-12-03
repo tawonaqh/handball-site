@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function CreateRankingPage() {
   const [formData, setFormData] = useState({
     league_id: '',
@@ -27,8 +29,8 @@ export default function CreateRankingPage() {
       try {
         // Load leagues and teams in parallel
         const [leaguesResponse, teamsResponse] = await Promise.all([
-          fetch('http://localhost:8000/api/leagues'),
-          fetch('http://localhost:8000/api/teams')
+          fetch(`${API_URL}/leagues`),
+          fetch(`${API_URL}/teams`)
         ]);
 
         if (!leaguesResponse.ok || !teamsResponse.ok) {
@@ -168,7 +170,7 @@ export default function CreateRankingPage() {
         points: formData.points
       };
 
-      const response = await fetch('http://localhost:8000/api/rankings', {
+      const response = await fetch(`${API_URL}/rankings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

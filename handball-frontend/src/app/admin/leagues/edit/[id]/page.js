@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function EditLeaguePage() {
   const params = useParams();
   const router = useRouter();
@@ -22,7 +24,7 @@ export default function EditLeaguePage() {
     async function loadData() {
       try {
         // Load tournaments first
-        const tournamentsResponse = await fetch('http://localhost:8000/api/tournaments');
+        const tournamentsResponse = await fetch(`${API_URL}/tournaments`);
         if (!tournamentsResponse.ok) {
           throw new Error('Failed to fetch tournaments');
         }
@@ -30,7 +32,7 @@ export default function EditLeaguePage() {
         setTournaments(tournamentsData);
 
         // Then load league data
-        const leagueResponse = await fetch(`http://localhost:8000/api/leagues/${id}`);
+        const leagueResponse = await fetch(`${API_URL}/leagues/${id}`);
         if (!leagueResponse.ok) {
           throw new Error('Failed to fetch league');
         }
@@ -98,7 +100,7 @@ export default function EditLeaguePage() {
     setErrors({});
 
     try {
-      const response = await fetch(`http://localhost:8000/api/leagues/${id}`, {
+      const response = await fetch(`${API_URL}/leagues/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function TeamForm({ team }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -16,7 +18,7 @@ export default function TeamForm({ team }) {
   useEffect(() => {
     async function loadLeagues() {
       try {
-        const response = await fetch('http://localhost:8000/api/leagues');
+        const response = await fetch(`${API_URL}/leagues`);
         if (!response.ok) {
           throw new Error('Failed to fetch leagues');
         }
@@ -86,8 +88,8 @@ export default function TeamForm({ team }) {
     try {
       const method = team ? 'PUT' : 'POST';
       const url = team 
-        ? `http://localhost:8000/api/teams/${team.id}`
-        : 'http://localhost:8000/api/teams';
+        ? `${API_URL}/teams/${team.id}`
+        : `${API_URL}/teams`;
 
       const response = await fetch(url, {
         method,

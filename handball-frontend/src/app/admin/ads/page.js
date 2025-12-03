@@ -1,8 +1,17 @@
 import { fetcher } from "@/lib/api";
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
 export default async function AdminAds() {
   const ads = await fetcher('ads');
+
+  async function handleDelete(id) {
+    'use client';
+    if (!confirm('Are you sure you want to delete this ad?')) return;
+    await fetch(`${API_URL}/ads/${id}`, { method: 'DELETE' });
+    location.reload();
+  }
 
   return (
     <div className="p-4 space-y-4">
@@ -32,10 +41,4 @@ export default async function AdminAds() {
       </table>
     </div>
   );
-}
-
-async function handleDelete(id) {
-  if (!confirm('Are you sure you want to delete this ad?')) return;
-  await fetch(`http://localhost:8000/api/ads/${id}`, { method: 'DELETE' });
-  location.reload();
 }
