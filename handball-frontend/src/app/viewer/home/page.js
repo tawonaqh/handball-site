@@ -101,85 +101,244 @@ export default function HomePage() {
     <ViewerLayout>
       <div className="flex flex-col">
         
-        {/* 🔥 HERO SECTION */}
-        <section className="relative h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-yellow-500 overflow-hidden">
-          <div className="absolute inset-0 bg-black/40 z-10"></div>
-          <Image
-            src="/img/hero1.jpg"
-            alt="Handball action"
-            fill
-            className="object-cover"
-            priority
-          />
+        {/* 🔥 ENHANCED HERO SECTION */}
+        <section className="relative h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-yellow-500 overflow-hidden -mt-20 pt-24">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(15)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-white/20 rounded-full"
+                animate={{
+                  x: [0, Math.random() * 100 - 50],
+                  y: [0, Math.random() * 100 - 50],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{
+                  duration: Math.random() * 4 + 3,
+                  repeat: Infinity,
+                  delay: Math.random() * 2
+                }}
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Enhanced Background Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-orange-900/30 to-black/60 z-10"></div>
+          
+          {/* Background Image with Parallax */}
+          <motion.div
+            className="absolute inset-0"
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+          >
+            <Image
+              src="/img/hero1.jpg"
+              alt="Handball action"
+              fill
+              className="object-cover"
+              priority
+            />
+          </motion.div>
+
+          {/* Geometric Decorative Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              className="absolute top-1/4 right-1/4 w-32 h-32 border-2 border-white/10 rotate-45"
+              animate={{ rotate: [45, 405] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            />
+            <motion.div
+              className="absolute bottom-1/3 left-1/4 w-24 h-24 border border-yellow-400/20 rounded-full"
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 5, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute top-1/2 left-1/6 w-16 h-16 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-xl"
+              animate={{ 
+                x: [0, 40, 0],
+                y: [0, -30, 0]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+          </div>
+          
           <div className="relative z-20 container mx-auto px-6 h-full flex items-center">
             <motion.div 
-              className="max-w-3xl text-white space-y-8"
-              initial={{ opacity: 0, y: 60 }}
+              className="max-w-4xl text-white space-y-10"
+              initial={{ opacity: 0, y: 80 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 1, ease: "easeOut" }}
             >
-              <div className="space-y-4">
-                <h1 className="text-6xl md:text-7xl font-black leading-tight">
-                  Zimbabwe<br />
-                  <span className="text-yellow-300">Handball</span><br />
-                  <span className="text-4xl md:text-5xl">Hub</span>
-                </h1>
-                <p className="text-xl md:text-2xl font-light text-yellow-100 max-w-2xl">
-                  Your premier destination for handball tournaments, team rankings, and player highlights across Zimbabwe.
-                </p>
+              {/* Enhanced Badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="inline-flex items-center space-x-3 bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full shadow-2xl"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                >
+                  <FaTrophy className="text-yellow-400" size={24} />
+                </motion.div>
+                <span className="font-bold text-lg">Zimbabwe's Premier Handball Hub</span>
+              </motion.div>
+
+              {/* Enhanced Main Title - Adjusted positioning */}
+              <div className="space-y-6 mt-8">
+                <motion.h1 
+                  className="text-6xl md:text-8xl font-black leading-tight"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                >
+                  <span className="block">Zimbabwe</span>
+                  <span className="block relative">
+                    <span className="text-gradient bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                      Handball
+                    </span>
+                    {/* Glowing effect */}
+                    <span className="absolute inset-0 text-gradient bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent blur-sm opacity-50">
+                      Handball
+                    </span>
+                  </span>
+                  <span className="block text-5xl md:text-6xl mt-2">Hub</span>
+                </motion.h1>
+                
+                <motion.p 
+                  className="text-xl md:text-3xl font-light text-yellow-100 max-w-3xl leading-relaxed drop-shadow-lg"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.8 }}
+                >
+                  Your premier destination for handball tournaments, team rankings, player highlights, 
+                  and the latest news across Zimbabwe's handball community.
+                </motion.p>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Enhanced Action Buttons - Adjusted spacing */}
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-6 pt-8"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9, duration: 0.8 }}
+              >
                 <Link
                   href="/viewer/tournaments"
-                  className="group bg-yellow-400 text-orange-900 px-8 py-4 rounded-xl font-bold text-lg shadow-2xl hover:bg-yellow-300 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
+                  className="group relative bg-gradient-to-r from-yellow-400 to-orange-400 text-orange-900 px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-yellow-400/25 transition-all duration-500 transform hover:scale-110 flex items-center justify-center space-x-3 overflow-hidden"
                 >
-                  <FaTrophy className="text-orange-700" />
-                  <span>Explore Tournaments</span>
-                  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <FaTrophy className="relative z-10 text-orange-800 group-hover:rotate-12 transition-transform duration-300" size={24} />
+                  <span className="relative z-10">Explore Tournaments</span>
+                  <FaArrowRight className="relative z-10 group-hover:translate-x-2 transition-transform duration-300" size={20} />
                 </Link>
+                
                 <Link
                   href="/viewer/teams"
-                  className="group border-2 border-yellow-400 text-yellow-400 px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-400 hover:text-orange-900 transition-all duration-300 flex items-center justify-center space-x-2"
+                  className="group border-3 border-yellow-400 text-yellow-400 px-10 py-5 rounded-2xl font-bold text-xl hover:bg-yellow-400 hover:text-orange-900 transition-all duration-500 flex items-center justify-center space-x-3 backdrop-blur-sm bg-white/5"
                 >
-                  <FaUsers />
+                  <FaUsers className="group-hover:scale-125 transition-transform duration-300" size={24} />
                   <span>View Teams</span>
+                  <motion.div
+                    className="w-2 h-2 bg-yellow-400 rounded-full"
+                    animate={{ scale: [1, 1.5, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
                 </Link>
-              </div>
+              </motion.div>
 
-              {/* Quick Stats */}
+              {/* Enhanced Quick Stats */}
               <motion.div 
-                className="grid grid-cols-3 gap-6 pt-8"
+                className="grid grid-cols-3 gap-8 pt-12"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 1.1, duration: 0.8 }}
               >
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-300">{tournaments.length}</div>
-                  <div className="text-yellow-100 text-sm">Tournaments</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-300">{teams.length}</div>
-                  <div className="text-yellow-100 text-sm">Teams</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-300">{players.length}</div>
-                  <div className="text-yellow-100 text-sm">Players</div>
-                </div>
+                {[
+                  { value: tournaments.length, label: "Tournaments", icon: FaTrophy },
+                  { value: teams.length, label: "Teams", icon: FaUsers },
+                  { value: players.length, label: "Players", icon: IoPerson }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    className="text-center group"
+                    initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 1.2 + index * 0.1, duration: 0.6 }}
+                  >
+                    <div className="relative mb-4">
+                      <div className="w-16 h-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:bg-white/20 transition-all duration-300">
+                        <stat.icon className="text-yellow-400 group-hover:text-yellow-300" size={24} />
+                      </div>
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      />
+                    </div>
+                    <div className="text-4xl md:text-5xl font-black text-yellow-300 mb-2 group-hover:text-yellow-200 transition-colors">
+                      {stat.value}
+                    </div>
+                    <div className="text-sm md:text-base text-yellow-100 font-medium group-hover:text-white transition-colors">
+                      {stat.label}
+                    </div>
+                  </motion.div>
+                ))}
               </motion.div>
             </motion.div>
           </div>
           
-          {/* Scroll Indicator */}
+          {/* Enhanced Scroll Indicator - Repositioned to avoid button overlap */}
           <motion.div 
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 text-center"
+            animate={{ y: [0, 15, 0] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5 }}
           >
-            <div className="w-6 h-10 border-2 border-yellow-300 rounded-full flex justify-center">
-              <div className="w-1 h-3 bg-yellow-300 rounded-full mt-2"></div>
+            <div className="w-8 h-14 border-2 border-yellow-300/80 rounded-full flex justify-center backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-colors cursor-pointer mb-3">
+              <motion.div 
+                className="w-2 h-4 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-full mt-3"
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
             </div>
+            <p className="text-yellow-200 text-sm font-medium">Scroll to explore</p>
           </motion.div>
+
+          {/* Enhanced Decorative Blobs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              className="absolute top-1/4 left-1/6 w-40 h-40 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl"
+              animate={{ 
+                scale: [1, 1.4, 1],
+                opacity: [0.3, 0.7, 0.3]
+              }}
+              transition={{ duration: 6, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute bottom-1/4 right-1/6 w-48 h-48 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full blur-3xl"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.8, 0.4]
+              }}
+              transition={{ duration: 7, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute top-1/2 right-1/4 w-32 h-32 bg-gradient-to-r from-white/10 to-yellow-300/20 rounded-full blur-2xl"
+              animate={{ 
+                x: [0, 40, 0],
+                y: [0, -30, 0]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+          </div>
         </section>
 
         <main className="space-y-20 py-20">
@@ -475,80 +634,6 @@ export default function HomePage() {
           </section>
         </main>
 
-        {/* 🔗 Footer */}
-        <footer className="bg-gray-900 text-white py-16">
-          <div className="container mx-auto px-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-              <div>
-                <Link href="/viewer/home/" className="flex items-center">
-                  <Image
-                    src="/img/logo.png"
-                    alt="Handball 263 Logo"
-                    width={55}
-                    height={55}
-                    className="rounded-md"
-                  />
-                </Link>
-                <p className="text-gray-400 leading-relaxed">
-                  The ultimate platform for handball enthusiasts in Zimbabwe. Follow tournaments, track teams, and celebrate the sport.
-                </p>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-bold mb-4">Quick Links</h4>
-                <div className="space-y-2">
-                  {['Tournaments', 'Teams', 'Players', 'News', 'Rankings'].map((link) => (
-                    <Link
-                      key={link}
-                      href={`/viewer/${link.toLowerCase()}`}
-                      className="block text-gray-400 hover:text-yellow-400 transition-colors"
-                    >
-                      {link}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-bold mb-4">Connect With Us</h4>
-                <div className="flex space-x-4 mb-6">
-                  {[
-                    { Icon: FaFacebook, color: 'hover:text-blue-400' },
-                    { Icon: FaTwitter, color: 'hover:text-blue-400' },
-                    { Icon: FaInstagram, color: 'hover:text-pink-400' },
-                    { Icon: FaYoutube, color: 'hover:text-red-500' }
-                  ].map(({ Icon, color }, index) => (
-                    <button
-                      key={index}
-                      className={`w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 ${color} transition-colors`}
-                    >
-                      <Icon size={18} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-bold mb-4">Newsletter</h4>
-                <p className="text-gray-400 mb-4">Stay updated with the latest handball news</p>
-                <form className="flex">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="text-sm flex-1 px-2 py-3 bg-gray-800 text-white rounded-l-lg border border-gray-700 focus:border-yellow-400 focus:outline-none"
-                  />
-                  <button className="text-sm px-3 py-3 bg-yellow-400 text-gray-900 font-bold rounded-r-lg hover:bg-yellow-300 transition-colors">
-                    Subscribe
-                  </button>
-                </form>
-              </div>
-            </div>
-            
-            <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-              <p>&copy; 2024 Zimbabwe Handball Hub. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
       </div>
     </ViewerLayout>
   );
