@@ -4,8 +4,8 @@
   /* Core theme */
   --background: #ffffff;
   --foreground: #0f172a; /* slate-900 */
-  --muted: #64748b; /* slate-500 */
-  --muted-foreground: #475569; /* slate-600 */
+  --muted: #f1f5f9; /* slate-100 */
+  --muted-foreground: #64748b; /* slate-500 */
   
   /* Brand colors - Modern sports palette */
   --primary: #f97316; /* orange-500 */
@@ -29,16 +29,29 @@
   --info: #3b82f6; /* blue-500 */
 }
 
+[data-theme="dark"], .dark {
+  --background: #020617; /* slate-950 */
+  --foreground: #f1f5f9; /* slate-100 */
+  --muted: #1e293b; /* slate-800 */
+  --muted-foreground: #94a3b8; /* slate-400 */
+  --card: #0f172a; /* slate-900 */
+  --card-foreground: #f1f5f9;
+  --border: #334155; /* slate-700 */
+  --input: #1e293b; /* slate-800 */
+  --ring: rgba(249, 115, 22, 0.5);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #020617; /* slate-950 */
     --foreground: #f1f5f9; /* slate-100 */
-    --muted: #64748b; /* slate-500 */
+    --muted: #1e293b; /* slate-800 */
     --muted-foreground: #94a3b8; /* slate-400 */
     --card: #0f172a; /* slate-900 */
     --card-foreground: #f1f5f9;
-    --border: rgba(255, 255, 255, 0.1);
+    --border: #334155; /* slate-700 */
     --input: #1e293b; /* slate-800 */
+    --ring: rgba(249, 115, 22, 0.5);
   }
 }
 

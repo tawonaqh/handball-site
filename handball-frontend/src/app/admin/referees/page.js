@@ -1,259 +1,281 @@
-'use client'
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Scale, 
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  Eye,
+  MapPin,
+  Calendar,
+  Award,
+  Phone,
+  Mail
+} from 'lucide-react';
+import { fetcher } from '@/lib/api';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const RefereeCard = ({ referee, index }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-500/20 text-green-400';
+      case 'inactive': return 'bg-red-500/20 text-red-400';
+      case 'suspended': return 'bg-yellow-500/20 text-yellow-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
 
-export default function AdminReferees() {
+  const getLevelColor = (level) => {
+    switch (level) {
+      case 'international': return 'bg-purple-500/20 text-purple-400';
+      case 'national': return 'bg-blue-500/20 text-blue-400';
+      case 'regional': return 'bg-green-500/20 text-green-400';
+      case 'local': return 'bg-orange-500/20 text-orange-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
+            <Scale className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
+              {referee.name}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {referee.certification_level || 'Referee'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Link href={`/admin/referees/${referee.id}`}>
+            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+              <Eye className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link href={`/admin/referees/${referee.id}/edit`}>
+            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+              <Edit className="w-4 h-4" />
+            </button>
+          </Link>
+          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Award className="w-4 h-4" />
+          <span>License: {referee.license_number || 'N/A'}</span>
+        </div>
+        
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <MapPin className="w-4 h-4" />
+          <span>{referee.location || 'Location not set'}</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Calendar className="w-4 h-4" />
+          <span>Experience: {referee.years_experience || 0} years</span>
+        </div>
+
+        {referee.phone && (
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Phone className="w-4 h-4" />
+            <span>{referee.phone}</span>
+          </div>
+        )}
+
+        {referee.email && (
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Mail className="w-4 h-4" />
+            <span>{referee.email}</span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(referee.certification_level)}`}>
+            {referee.certification_level || 'local'}
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(referee.status)}`}>
+            {referee.status || 'inactive'}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function RefereesPage() {
   const [referees, setReferees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterLevel, setFilterLevel] = useState('all');
 
   useEffect(() => {
     async function loadReferees() {
       try {
-        const response = await fetch(`${API_URL}/referees`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch referees');
-        }
-        const data = await response.json();
-        setReferees(data);
+        const data = await fetcher('referees');
+        setReferees(data || []);
       } catch (error) {
         console.error('Error loading referees:', error);
-        alert('Error loading referees');
+        setReferees([]);
       } finally {
         setLoading(false);
       }
     }
+
     loadReferees();
   }, []);
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this referee? This action cannot be undone.')) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/referees/${id}`, { 
-        method: 'DELETE' 
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete referee');
-      }
-      
-      // Remove the referee from state instead of reloading
-      setReferees(referees.filter(referee => referee.id !== id));
-    } catch (error) {
-      console.error('Error deleting referee:', error);
-      alert('Error deleting referee');
-    }
-  }
+  const filteredReferees = referees.filter(referee => {
+    const matchesSearch = referee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         referee.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         referee.license_number?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || referee.status === filterStatus;
+    const matchesLevel = filterLevel === 'all' || referee.certification_level === filterLevel;
+    return matchesSearch && matchesStatus && matchesLevel;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading referees...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading referees...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Referee Management</h1>
-            <p className="text-gray-600">Create, edit, and manage your referees</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg"
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+            <Scale className="w-8 h-8 text-teal-500" />
+            <span>Referees</span>
+          </h1>
+          <p className="text-gray-400 mt-2">Manage referee registrations and certifications</p>
+        </div>
+        
+        <Link href="/admin/referees/create">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            🏠 Dashboard Home
-          </button>
-        </div>
+            <Plus className="w-5 h-5" />
+            <span>Add Referee</span>
+          </motion.button>
+        </Link>
+      </motion.div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-800">All Referees</h2>
-            <Link 
-              href="/admin/referees/create" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search referees..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300 appearance-none"
             >
-              <span>+</span>
-              <span>Add New Referee</span>
-            </Link>
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+
+          {/* Level Filter */}
+          <div className="relative">
+            <Award className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterLevel}
+              onChange={(e) => setFilterLevel(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Levels</option>
+              <option value="international">International</option>
+              <option value="national">National</option>
+              <option value="regional">Regional</option>
+              <option value="local">Local</option>
+            </select>
           </div>
         </div>
+      </motion.div>
 
-        {/* Referees Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {referees.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">⚖️</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No referees found</h3>
-              <p className="text-gray-500 mb-6">Get started by creating your first referee</p>
-              <Link 
-                href="/admin/referees/create" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-block"
-              >
-                Create Referee
+      {/* Referees Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredReferees.length > 0 ? (
+          filteredReferees.map((referee, index) => (
+            <RefereeCard key={referee.id} referee={referee} index={index} />
+          ))
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full text-center py-12"
+          >
+            <Scale className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No referees found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || filterStatus !== 'all' || filterLevel !== 'all'
+                ? 'Try adjusting your search or filters' 
+                : 'Add your first referee to get started'
+              }
+            </p>
+            {!searchTerm && filterStatus === 'all' && filterLevel === 'all' && (
+              <Link href="/admin/referees/create">
+                <button className="px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  Add Referee
+                </button>
               </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Referee
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Level
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Tournament & Contact
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Details
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {referees.map((referee) => (
-                    <tr key={referee.id} className="hover:bg-gray-50 transition duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 font-semibold text-sm">
-                              {referee.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-semibold text-gray-900">{referee.name}</div>
-                            <div className="text-xs text-gray-500">
-                              Joined {new Date(referee.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          referee.level === 'international' ? 'bg-purple-100 text-purple-800' :
-                          referee.level === 'national' ? 'bg-blue-100 text-blue-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {referee.level?.charAt(0).toUpperCase() + referee.level?.slice(1) || 'Regional'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {referee.tournament ? (
-                            <div className="space-y-1">
-                              <div className="font-medium">{referee.tournament.name}</div>
-                              <div className="text-xs text-gray-500 space-y-1">
-                                {referee.email && (
-                                  <div>📧 {referee.email}</div>
-                                )}
-                                {referee.phone && (
-                                  <div>📞 {referee.phone}</div>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-500 italic">No tournament</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700 space-y-1">
-                          <div className="flex space-x-4 text-xs">
-                            <div className="text-center">
-                              <div className="font-bold text-gray-900">{referee.games?.length || 0}</div>
-                              <div className="text-gray-500">Matches</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="font-bold text-green-600">
-                                {referee.is_active ? 'Active' : 'Inactive'}
-                              </div>
-                              <div className="text-gray-500">Status</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="font-bold text-blue-600">
-                                {referee.license_number || 'No license'}
-                              </div>
-                              <div className="text-gray-500">License</div>
-                            </div>
-                          </div>
-                          {referee.license_number && (
-                            <div className="text-xs text-gray-500">
-                              License: {referee.license_number}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-3">
-                          <Link
-                            href={`/admin/referees/edit/${referee.id}`}
-                            className="text-blue-600 hover:text-blue-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>✏️</span>
-                            <span>Edit</span>
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(referee.id)}
-                            className="text-red-600 hover:text-red-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>🗑️</span>
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {referees.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-600">{referees.length}</div>
-                <div className="text-sm text-blue-800">Total Referees</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {referees.filter(r => r.is_active).length}
-                </div>
-                <div className="text-sm text-green-800">Active Referees</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-600">
-                  {referees.filter(r => r.level === 'international').length}
-                </div>
-                <div className="text-sm text-purple-800">International Level</div>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-orange-600">
-                  {referees.reduce((total, referee) => total + (referee.games?.length || 0), 0)}
-                </div>
-                <div className="text-sm text-orange-800">Total Matches</div>
-              </div>
-            </div>
-          </div>
+            )}
+          </motion.div>
         )}
       </div>
     </div>

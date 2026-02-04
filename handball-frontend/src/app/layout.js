@@ -1,7 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,14 +12,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Handball 263",
-  description: "This is the offical site for the Handball 263 sports board",
+  title: "Handball 263 - Zimbabwe's Premier Handball Hub",
+  description: "Experience the ultimate handball destination with live tournaments, comprehensive rankings, detailed player statistics, and breaking news from across Zimbabwe.",
+  keywords: "handball, zimbabwe, sports, tournaments, rankings, players, teams, news",
+  authors: [{ name: "Handball 263" }],
+  creator: "Handball 263",
+  publisher: "Handball 263",
+  openGraph: {
+    title: "Handball 263 - Zimbabwe's Premier Handball Hub",
+    description: "Experience the ultimate handball destination with live tournaments, comprehensive rankings, detailed player statistics, and breaking news from across Zimbabwe.",
+    url: "https://handball263.com",
+    siteName: "Handball 263",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Handball 263 - Zimbabwe's Premier Handball Hub",
+    description: "Experience the ultimate handball destination with live tournaments, comprehensive rankings, detailed player statistics, and breaking news from across Zimbabwe.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900`}>
         {children}
       </body>
     </html>

@@ -1,280 +1,279 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { fetcher } from "@/lib/api";
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
-  FileText, 
+  Newspaper, 
   Plus, 
+  Search, 
+  Filter, 
   Edit, 
   Trash2, 
+  Eye,
   Calendar,
   User,
-  Eye,
-  Search
+  Tag,
+  Clock
 } from 'lucide-react';
+import { fetcher } from '@/lib/api';
+import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const NewsCard = ({ article, index }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'published': return 'bg-green-500/20 text-green-400';
+      case 'draft': return 'bg-yellow-500/20 text-yellow-400';
+      case 'archived': return 'bg-gray-500/20 text-gray-400';
+      default: return 'bg-blue-500/20 text-blue-400';
+    }
+  };
 
-export default function AdminNews() {
-  const [newsList, setNewsList] = useState([]);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+            <Newspaper className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors line-clamp-2">
+              {article.title}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {article.category || 'News'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Link href={`/admin/news/${article.id}`}>
+            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+              <Eye className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link href={`/admin/news/${article.id}/edit`}>
+            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+              <Edit className="w-4 h-4" />
+            </button>
+          </Link>
+          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm text-gray-300 line-clamp-3">
+          {article.excerpt || article.content?.substring(0, 150) + '...' || 'No excerpt available'}
+        </p>
+        
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Calendar className="w-4 h-4" />
+          <span>
+            {article.published_at 
+              ? new Date(article.published_at).toLocaleDateString()
+              : article.created_at 
+              ? new Date(article.created_at).toLocaleDateString()
+              : 'No date'
+            }
+          </span>
+        </div>
+        
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <User className="w-4 h-4" />
+          <span>By {article.author || 'Admin'}</span>
+        </div>
+
+        {article.tags && (
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Tag className="w-4 h-4" />
+            <div className="flex flex-wrap gap-1">
+              {article.tags.split(',').slice(0, 3).map((tag, i) => (
+                <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs">
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Clock className="w-4 h-4" />
+            <span>{article.read_time || '5'} min read</span>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(article.status)}`}>
+            {article.status || 'draft'}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function NewsPage() {
+  const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const router = useRouter();
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
 
   useEffect(() => {
-    async function loadNews() {
+    async function loadArticles() {
       try {
         const data = await fetcher('news');
-        setNewsList(data);
+        setArticles(data || []);
       } catch (error) {
         console.error('Error loading news:', error);
-        alert('Error loading news');
+        setArticles([]);
       } finally {
         setLoading(false);
       }
     }
-    loadNews();
+
+    loadArticles();
   }, []);
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this news article? This action cannot be undone.')) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/news/${id}`, { 
-        method: 'DELETE' 
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete news article');
-      }
-      
-      setNewsList(newsList.filter(news => news.id !== id));
-    } catch (error) {
-      console.error('Error deleting news:', error);
-      alert('Error deleting news article');
-    }
-  }
+  const categories = [...new Set(articles.map(article => article.category).filter(Boolean))];
 
-  const filteredNews = newsList.filter(news =>
-    news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    news.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredArticles = articles.filter(article => {
+    const matchesSearch = article.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         article.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         article.author?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || article.status === filterStatus;
+    const matchesCategory = filterCategory === 'all' || article.category === filterCategory;
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading news...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading news...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">News Management</h1>
-            <p className="text-gray-600">Create, edit, and manage your news articles</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+            <Newspaper className="w-8 h-8 text-yellow-500" />
+            <span>News</span>
+          </h1>
+          <p className="text-gray-400 mt-2">Manage news articles and announcements</p>
+        </div>
+        
+        <Link href="/admin/news/create">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            <span>🏠</span>
-            <span>Dashboard Home</span>
-          </button>
-        </div>
+            <Plus className="w-5 h-5" />
+            <span>Write Article</span>
+          </motion.button>
+        </Link>
+      </motion.div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-800">All News Articles</h2>
-              <p className="text-gray-600 mt-1">
-                {filteredNews.length} {filteredNews.length === 1 ? 'article' : 'articles'} found
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search news..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-gray-600 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-                />
-              </div>
-              
-              {/* Create Button */}
-              <Link 
-                href="/admin/news/create" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
-              >
-                <Plus size={20} />
-                <span>Create News</span>
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search articles..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="relative">
+            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Articles Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredArticles.length > 0 ? (
+          filteredArticles.map((article, index) => (
+            <NewsCard key={article.id} article={article} index={index} />
+          ))
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full text-center py-12"
+          >
+            <Newspaper className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No articles found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || filterStatus !== 'all' || filterCategory !== 'all'
+                ? 'Try adjusting your search or filters' 
+                : 'Write your first article to get started'
+              }
+            </p>
+            {!searchTerm && filterStatus === 'all' && filterCategory === 'all' && (
+              <Link href="/admin/news/create">
+                <button className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  Write Article
+                </button>
               </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* News Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {filteredNews.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📰</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {searchTerm ? 'No matching news found' : 'No news articles yet'}
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {searchTerm 
-                  ? 'Try adjusting your search terms' 
-                  : 'Get started by creating your first news article'
-                }
-              </p>
-              {!searchTerm && (
-                <Link 
-                  href="/admin/news/create" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-flex items-center space-x-2"
-                >
-                  <Plus size={20} />
-                  <span>Create News Article</span>
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Article
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Author & Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Last Updated
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredNews.map((news) => (
-                    <tr key={news.id} className="hover:bg-gray-50 transition duration-150">
-                      <td className="px-6 py-4">
-                        <div className="flex items-start space-x-4">
-                          <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <FileText className="text-white" size={20} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
-                              {news.title}
-                            </h3>
-                            <p className="text-gray-600 text-sm line-clamp-2">
-                              {news.content}
-                            </p>
-                            {news.image_url && (
-                              <div className="mt-2">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Has Image
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <User size={16} className="text-gray-400" />
-                            <span>Author {news.author_id}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Calendar size={16} className="text-gray-400" />
-                            <span>{new Date(news.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
-                          {new Date(news.updated_at).toLocaleDateString()}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {new Date(news.updated_at).toLocaleTimeString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-3">
-                          <Link
-                            href={`/admin/news/edit/${news.id}`}
-                            className="text-blue-600 hover:text-blue-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <Edit size={16} />
-                            <span>Edit</span>
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(news.id)}
-                            className="text-red-600 hover:text-red-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <Trash2 size={16} />
-                            <span>Delete</span>
-                          </button>
-                          <Link
-                            href={`/viewer/news/${news.id}`}
-                            className="text-green-600 hover:text-green-900 font-semibold transition duration-150 flex items-center space-x-1"
-                            target="_blank"
-                          >
-                            <Eye size={16} />
-                            <span>View</span>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {filteredNews.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-600">{newsList.length}</div>
-                <div className="text-sm text-blue-800">Total Articles</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {newsList.filter(n => n.image_url).length}
-                </div>
-                <div className="text-sm text-green-800">With Images</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-600">
-                  {new Set(newsList.map(n => n.author_id)).size}
-                </div>
-                <div className="text-sm text-purple-800">Unique Authors</div>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-orange-600">
-                  {newsList.filter(n => new Date(n.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}
-                </div>
-                <div className="text-sm text-orange-800">Last 7 Days</div>
-              </div>
-            </div>
-          </div>
+            )}
+          </motion.div>
         )}
       </div>
     </div>

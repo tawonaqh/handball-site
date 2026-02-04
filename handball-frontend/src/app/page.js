@@ -1,6 +1,6 @@
-// app/page.js or app/page.tsx
+// app/page.js - Clean redirect to home
 import { redirect } from 'next/navigation';
 
-export default function Home() {
-  redirect('/viewer/home');
+export default function RootPage() {
+  redirect('/home');
 }

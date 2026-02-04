@@ -1,9 +1,10 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { isAuthenticated } from '@/lib/auth';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -13,30 +14,32 @@ export default function AdminLayout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Don't check auth on login page
+    // Apply dark theme to admin
+    document.documentElement.classList.add('dark');
+    
+    // Don't check auth on login page (handled by middleware)
     if (pathname === '/admin/login') {
       setIsChecking(false);
       return;
     }
 
-    // Check authentication
-    if (!isAuthenticated()) {
+    // Quick client-side check (middleware handles the real auth)
+    const authData = localStorage.getItem('admin_auth');
+    if (!authData) {
       router.push('/admin/login');
     } else {
       setIsChecking(false);
     }
+
+    return () => {
+      // Clean up dark theme when leaving admin
+      document.documentElement.classList.remove('dark');
+    };
   }, [router, pathname]);
 
   // Show loading while checking auth
   if (isChecking && pathname !== '/admin/login') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="spinner w-12 h-12 mx-auto mb-4"></div>
-          <p className="text-muted-foreground text-lg">Checking authentication...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Checking authentication..." />;
   }
 
   // Don't show admin layout on login page
@@ -45,44 +48,38 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <AdminSidebar 
-          collapsed={sidebarCollapsed} 
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-        />
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white flex">
+      {/* Sidebar */}
+      <AdminSidebar 
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
+        mobileOpen={mobileMenuOpen}
+        setMobileOpen={setMobileMenuOpen}
+      />
 
-      {/* Mobile Sidebar Overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw]">
-            <AdminSidebar 
-              collapsed={false} 
-              onToggle={() => setMobileMenuOpen(false)} 
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Header */}
         <AdminHeader 
-          onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           sidebarCollapsed={sidebarCollapsed}
         />
-        
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
+
+        {/* Page content with dark theme */}
+        <main className="flex-1 p-6 overflow-auto bg-gray-900">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,162 +1,233 @@
 'use client';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Flag, 
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  Eye,
+  Calendar,
+  Users,
+  Trophy,
+  MapPin
+} from 'lucide-react';
 import { fetcher } from '@/lib/api';
+import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const TournamentCard = ({ tournament, index }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <Flag className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
+              {tournament.name}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {tournament.type || 'Tournament'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Link href={`/admin/tournaments/${tournament.id}`}>
+            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+              <Eye className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link href={`/admin/tournaments/${tournament.id}/edit`}>
+            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+              <Edit className="w-4 h-4" />
+            </button>
+          </Link>
+          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
-export default function AdminTournaments() {
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Calendar className="w-4 h-4" />
+          <span>
+            {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'TBD'} - 
+            {tournament.end_date ? new Date(tournament.end_date).toLocaleDateString() : 'TBD'}
+          </span>
+        </div>
+        
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <MapPin className="w-4 h-4" />
+          <span>{tournament.location || 'Location TBD'}</span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Users className="w-4 h-4" />
+            <span>{tournament.teams_count || 0} Teams</span>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            tournament.status === 'active' 
+              ? 'bg-green-500/20 text-green-400' 
+              : tournament.status === 'completed'
+              ? 'bg-blue-500/20 text-blue-400'
+              : 'bg-yellow-500/20 text-yellow-400'
+          }`}>
+            {tournament.status || 'upcoming'}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     async function loadTournaments() {
       try {
         const data = await fetcher('tournaments');
-        setTournaments(data);
+        setTournaments(data || []);
       } catch (error) {
         console.error('Error loading tournaments:', error);
-        alert('Error loading tournaments');
+        setTournaments([]);
       } finally {
         setLoading(false);
       }
     }
+
     loadTournaments();
   }, []);
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this tournament?')) return;
-    
-    try {
-      await fetch(`${API_URL}/tournaments/${id}`, { 
-        method: 'DELETE' 
-      });
-      setTournaments(tournaments.filter(t => t.id !== id));
-    } catch (error) {
-      console.error('Error deleting tournament:', error);
-      alert('Error deleting tournament');
-    }
+  const filteredTournaments = tournaments.filter(tournament => {
+    const matchesSearch = tournament.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tournament.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || tournament.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading tournaments...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Tournament Management</h1>
-            <p className="text-gray-600">Create, edit, and manage your tournaments</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg"
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+            <Flag className="w-8 h-8 text-orange-500" />
+            <span>Tournaments</span>
+          </h1>
+          <p className="text-gray-400 mt-2">Manage tournament competitions</p>
+        </div>
+        
+        <Link href="/admin/tournaments/create">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            🏠 Dashboard Home
-          </button>
-        </div>
+            <Plus className="w-5 h-5" />
+            <span>Create Tournament</span>
+          </motion.button>
+        </Link>
+      </motion.div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-800">All Tournaments</h2>
-            <Link 
-              href="/admin/tournaments/create" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
+      >
+        <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search tournaments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-300 appearance-none"
             >
-              <span>+</span>
-              <span>Create New Tournament</span>
-            </Link>
+              <option value="all">All Status</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
         </div>
+      </motion.div>
 
-        {/* Tournaments Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : tournaments.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">🏆</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No tournaments found</h3>
-              <p className="text-gray-500 mb-6">Get started by creating your first tournament</p>
-              <Link 
-                href="/admin/tournaments/create" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-block"
-              >
-                Create Tournament
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Tournament Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Start Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      End Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {tournaments.map((tournament) => (
-                    <tr key={tournament.id} className="hover:bg-gray-50 transition duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">{tournament.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">
-                          {new Date(tournament.start_date).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">
-                          {new Date(tournament.end_date).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-3">
-                          <Link
-                            href={`/admin/tournaments/edit/${tournament.id}`}
-                            className="text-blue-600 hover:text-blue-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>✏️</span>
-                            <span>Edit</span>
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(tournament.id)}
-                            className="text-red-600 hover:text-red-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>🗑️</span>
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {!loading && tournaments.length > 0 && (
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
-              Showing {tournaments.length} tournament{tournaments.length !== 1 ? 's' : ''}
+      {/* Tournaments Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTournaments.length > 0 ? (
+          filteredTournaments.map((tournament, index) => (
+            <TournamentCard key={tournament.id} tournament={tournament} index={index} />
+          ))
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full text-center py-12"
+          >
+            <Flag className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No tournaments found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Try adjusting your search or filters' 
+                : 'Create your first tournament to get started'
+              }
             </p>
-          </div>
+            {!searchTerm && filterStatus === 'all' && (
+              <Link href="/admin/tournaments/create">
+                <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  Create Tournament
+                </button>
+              </Link>
+            )}
+          </motion.div>
         )}
       </div>
     </div>

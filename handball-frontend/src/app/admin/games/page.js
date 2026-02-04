@@ -1,295 +1,294 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Calendar, 
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  Eye,
+  Clock,
+  Users,
+  MapPin,
+  PlayCircle,
+  Pause,
+  Square
+} from 'lucide-react';
 import { fetcher } from '@/lib/api';
+import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const GameCard = ({ game, index }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'live': return 'bg-red-500/20 text-red-400';
+      case 'completed': return 'bg-green-500/20 text-green-400';
+      case 'scheduled': return 'bg-blue-500/20 text-blue-400';
+      case 'postponed': return 'bg-yellow-500/20 text-yellow-400';
+      case 'cancelled': return 'bg-gray-500/20 text-gray-400';
+      default: return 'bg-blue-500/20 text-blue-400';
+    }
+  };
 
-export default function AdminGames() {
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'live': return PlayCircle;
+      case 'completed': return Square;
+      case 'postponed': return Pause;
+      default: return Clock;
+    }
+  };
+
+  const StatusIcon = getStatusIcon(game.status);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+            <Calendar className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
+              {game.home_team?.name || 'Team A'} vs {game.away_team?.name || 'Team B'}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {game.league?.name || 'Match'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Link href={`/admin/games/${game.id}`}>
+            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+              <Eye className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link href={`/admin/games/${game.id}/edit`}>
+            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+              <Edit className="w-4 h-4" />
+            </button>
+          </Link>
+          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Clock className="w-4 h-4" />
+          <span>
+            {game.match_date ? new Date(game.match_date).toLocaleDateString() : 'TBD'} 
+            {game.match_time && ` at ${game.match_time}`}
+          </span>
+        </div>
+        
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <MapPin className="w-4 h-4" />
+          <span>{game.venue || 'Venue TBD'}</span>
+        </div>
+
+        {game.status === 'completed' && (
+          <div className="flex items-center justify-center space-x-4 py-2 bg-gray-700/30 rounded-lg">
+            <div className="text-center">
+              <div className="text-lg font-bold text-white">{game.home_score || 0}</div>
+              <div className="text-xs text-gray-400">{game.home_team?.name || 'Home'}</div>
+            </div>
+            <div className="text-gray-400">-</div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-white">{game.away_score || 0}</div>
+              <div className="text-xs text-gray-400">{game.away_team?.name || 'Away'}</div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Users className="w-4 h-4" />
+            <span>Round {game.round || 1}</span>
+          </div>
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(game.status)}`}>
+            <StatusIcon className="w-3 h-3" />
+            <span>{game.status || 'scheduled'}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function GamesPage() {
   const [games, setGames] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [leagues, setLeagues] = useState([]);
-  const [referees, setReferees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterLeague, setFilterLeague] = useState('all');
+  const [leagues, setLeagues] = useState([]);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [gamesData, teamsData, leaguesData, refereesData] = await Promise.all([
-          fetcher('games?include=referee'),
-          fetcher('teams'),
-          fetcher('leagues'),
-          fetcher('referees')
+        const [gamesData, leaguesData] = await Promise.all([
+          fetcher('games'),
+          fetcher('leagues')
         ]);
-        setGames(gamesData);
-        setTeams(teamsData);
-        setLeagues(leaguesData);
-        setReferees(refereesData);
+        setGames(gamesData || []);
+        setLeagues(leaguesData || []);
       } catch (error) {
-        console.error('Error loading games:', error);
-        alert('Error loading games');
+        console.error('Error loading data:', error);
+        setGames([]);
+        setLeagues([]);
       } finally {
         setLoading(false);
       }
     }
+
     loadData();
   }, []);
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this game? This action cannot be undone.')) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/games/${id}`, { 
-        method: 'DELETE' 
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete game');
-      }
-      
-      setGames(games.filter(game => game.id !== id));
-    } catch (error) {
-      console.error('Error deleting game:', error);
-      alert('Error deleting game');
-    }
-  }
-
-  // Create lookups for teams, leagues, and referees
-  const teamLookup = Object.fromEntries(teams.map(t => [t.id, t]));
-  const leagueLookup = Object.fromEntries(leagues.map(l => [l.id, l]));
-  const refereeLookup = Object.fromEntries(referees.map(r => [r.id, r]));
-
-  // Get referee name safely
-  const getRefereeName = (match) => {
-    if (match.referee_id && refereeLookup[match.referee_id]) {
-      return refereeLookup[match.referee_id].name;
-    }
-    if (match.referee && typeof match.referee === 'object') {
-      return match.referee.name;
-    }
-    if (typeof match.referee === 'string') {
-      return match.referee;
-    }
-    return null;
-  };
-
-  // Calculate statistics
-  const totalMatches = games.length;
-  const completedMatches = games.filter(g => g.status === 'completed').length;
-  const upcomingMatches = games.filter(g => g.status === 'scheduled' || !g.status).length;
-  const liveMatches = games.filter(g => g.status === 'live').length;
+  const filteredGames = games.filter(game => {
+    const matchesSearch = game.home_team?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         game.away_team?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         game.venue?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || game.status === filterStatus;
+    const matchesLeague = filterLeague === 'all' || game.league_id?.toString() === filterLeague;
+    return matchesSearch && matchesStatus && matchesLeague;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading games...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading games...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Game Management</h1>
-            <p className="text-gray-600">Create, edit, and manage your games</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg"
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+            <Calendar className="w-8 h-8 text-indigo-500" />
+            <span>Games</span>
+          </h1>
+          <p className="text-gray-400 mt-2">Schedule and manage match fixtures</p>
+        </div>
+        
+        <Link href="/admin/games/create">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            🏠 Dashboard Home
-          </button>
-        </div>
+            <Plus className="w-5 h-5" />
+            <span>Schedule Game</span>
+          </motion.button>
+        </Link>
+      </motion.div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-800">All Games</h2>
-            <Link 
-              href="/admin/games/create" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search games..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 appearance-none"
             >
-              <span>+</span>
-              <span>Add New Game</span>
-            </Link>
+              <option value="all">All Status</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="live">Live</option>
+              <option value="completed">Completed</option>
+              <option value="postponed">Postponed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          {/* League Filter */}
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterLeague}
+              onChange={(e) => setFilterLeague(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Leagues</option>
+              {leagues.map(league => (
+                <option key={league.id} value={league.id.toString()}>
+                  {league.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
+      </motion.div>
 
-        {/* Games Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {games.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">🏐</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No games found</h3>
-              <p className="text-gray-500 mb-6">Get started by creating your first game</p>
-              <Link 
-                href="/admin/games/create" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-block"
-              >
-                Create Game
+      {/* Games Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredGames.length > 0 ? (
+          filteredGames.map((game, index) => (
+            <GameCard key={game.id} game={game} index={index} />
+          ))
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full text-center py-12"
+          >
+            <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No games found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || filterStatus !== 'all' || filterLeague !== 'all'
+                ? 'Try adjusting your search or filters' 
+                : 'Schedule your first game to get started'
+              }
+            </p>
+            {!searchTerm && filterStatus === 'all' && filterLeague === 'all' && (
+              <Link href="/admin/games/create">
+                <button className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  Schedule Game
+                </button>
               </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Match
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Date & Time
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      League & Tournament
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Status & Referee
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {games.map((game) => {
-                    const homeTeam = teamLookup[game.home_team_id];
-                    const awayTeam = teamLookup[game.away_team_id];
-                    const league = leagueLookup[game.league_id];
-                    const matchDate = new Date(game.match_date);
-                    const refereeName = getRefereeName(game);
-                    const isCompleted = game.status === 'completed';
-                    const isLive = game.status === 'live';
-                    const isUpcoming = !isCompleted && !isLive;
-
-                    return (
-                      <tr key={game.id} className="hover:bg-gray-50 transition duration-150">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-4">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="text-sm font-semibold text-gray-900">
-                                  {homeTeam?.name || 'TBD'}
-                                </div>
-                                {(isCompleted || isLive) && (
-                                  <div className="text-lg font-bold text-gray-900">
-                                    {game.home_score ?? 0} - {game.away_score ?? 0}
-                                  </div>
-                                )}
-                                {isUpcoming && (
-                                  <div className="text-sm text-gray-500 font-medium">VS</div>
-                                )}
-                                <div className="text-sm font-semibold text-gray-900">
-                                  {awayTeam?.name || 'TBD'}
-                                </div>
-                              </div>
-                              {game.venue && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  📍 {game.venue}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {matchDate.toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {matchDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {league ? (
-                              <div className="space-y-1">
-                                <div className="font-medium">{league.name}</div>
-                                {league.tournament && (
-                                  <div className="text-xs text-gray-500">
-                                    {league.tournament.name}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-500 italic">No league</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="space-y-1">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              isLive 
-                                ? 'bg-red-100 text-red-800' 
-                                : isCompleted 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {isLive ? 'LIVE' : isCompleted ? 'COMPLETED' : 'UPCOMING'}
-                            </span>
-                            {refereeName && (
-                              <div className="text-xs text-gray-600 mt-1">
-                                👤 {refereeName}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-3">
-                            <Link
-                              href={`/admin/games/edit/${game.id}`}
-                              className="text-blue-600 hover:text-blue-900 font-semibold transition duration-150 flex items-center space-x-1"
-                            >
-                              <span>✏️</span>
-                              <span>Edit</span>
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(game.id)}
-                              className="text-red-600 hover:text-red-900 font-semibold transition duration-150 flex items-center space-x-1"
-                            >
-                              <span>🗑️</span>
-                              <span>Delete</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {games.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-600">{totalMatches}</div>
-                <div className="text-sm text-blue-800">Total Matches</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">{completedMatches}</div>
-                <div className="text-sm text-green-800">Completed</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-600">{upcomingMatches}</div>
-                <div className="text-sm text-purple-800">Upcoming</div>
-              </div>
-              <div className="bg-red-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-red-600">{liveMatches}</div>
-                <div className="text-sm text-red-800">Live Now</div>
-              </div>
-            </div>
-          </div>
+            )}
+          </motion.div>
         )}
       </div>
     </div>

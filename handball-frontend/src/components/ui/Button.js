@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = {
   variant: {
-    default: "gradient-primary text-primary-foreground shadow hover:shadow-lg",
-    secondary: "gradient-secondary text-secondary-foreground shadow hover:shadow-lg",
-    accent: "gradient-accent text-accent-foreground shadow hover:shadow-lg",
-    outline: "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground",
-    ghost: "text-primary hover:bg-primary/10 hover:text-primary",
+    default: "bg-primary text-primary-foreground shadow hover:bg-primary/90 hover:shadow-lg",
+    secondary: "bg-secondary text-secondary-foreground shadow hover:bg-secondary/90 hover:shadow-lg",
+    accent: "bg-accent text-accent-foreground shadow hover:bg-accent/90 hover:shadow-lg",
+    outline: "border-2 border-border text-foreground bg-transparent hover:bg-muted hover:text-foreground",
+    ghost: "text-foreground hover:bg-muted hover:text-foreground",
     link: "text-primary underline-offset-4 hover:underline p-0 h-auto",
     destructive: "bg-red-500 text-white shadow hover:bg-red-600 hover:shadow-lg",
   },
@@ -33,7 +33,7 @@ const Button = forwardRef(({
   return (
     <button
       className={cn(
-        "btn-base",
+        "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed",
         buttonVariants.variant[variant],
         buttonVariants.size[size],
         loading && "opacity-70 cursor-not-allowed",
@@ -44,7 +44,7 @@ const Button = forwardRef(({
       {...props}
     >
       {loading && (
-        <div className="spinner w-4 h-4 mr-2" />
+        <div className="spinner w-4 h-4 mr-2 border-current" />
       )}
       {children}
     </button>

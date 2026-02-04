@@ -1,328 +1,294 @@
-'use client'
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Image, 
-  Video, 
-  FileText, 
-  Eye, 
-  ExternalLink,
-  Play,
-  File
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  Eye,
+  Calendar,
+  Tag,
+  Download,
+  Upload
 } from 'lucide-react';
+import { fetcher } from '@/lib/api';
+import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const GalleryCard = ({ gallery, index }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'published': return 'bg-green-500/20 text-green-400';
+      case 'draft': return 'bg-yellow-500/20 text-yellow-400';
+      case 'private': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-blue-500/20 text-blue-400';
+    }
+  };
 
-export default function AdminGallery() {
-  const [items, setItems] = useState([]);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300 group"
+    >
+      {/* Image Preview */}
+      <div className="relative h-48 bg-gray-700/50 overflow-hidden">
+        {gallery.featured_image ? (
+          <img
+            src={gallery.featured_image}
+            alt={gallery.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Image className="w-16 h-16 text-gray-500" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute top-4 right-4">
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(gallery.status)}`}>
+            {gallery.status || 'draft'}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors line-clamp-2">
+              {gallery.title}
+            </h3>
+            <p className="text-sm text-gray-400 mt-1">
+              {gallery.category || 'Gallery'}
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 ml-4">
+            <Link href={`/admin/galleries/${gallery.id}`}>
+              <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                <Eye className="w-4 h-4" />
+              </button>
+            </Link>
+            <Link href={`/admin/galleries/${gallery.id}/edit`}>
+              <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                <Edit className="w-4 h-4" />
+              </button>
+            </Link>
+            <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-sm text-gray-300 line-clamp-2">
+            {gallery.description || 'No description available'}
+          </p>
+          
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Calendar className="w-4 h-4" />
+            <span>
+              {gallery.event_date 
+                ? new Date(gallery.event_date).toLocaleDateString()
+                : gallery.created_at 
+                ? new Date(gallery.created_at).toLocaleDateString()
+                : 'No date'
+              }
+            </span>
+          </div>
+
+          {gallery.tags && (
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Tag className="w-4 h-4" />
+              <div className="flex flex-wrap gap-1">
+                {gallery.tags.split(',').slice(0, 2).map((tag, i) => (
+                  <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Upload className="w-4 h-4" />
+              <span>{gallery.images_count || 0} images</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Download className="w-4 h-4" />
+              <span>{gallery.views || 0} views</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function GalleriesPage() {
+  const [galleries, setGalleries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
 
   useEffect(() => {
-    async function loadGallery() {
+    async function loadGalleries() {
       try {
-        const response = await fetch(`${API_URL}/gallery`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch gallery items');
-        }
-        const data = await response.json();
-        setItems(data);
+        const data = await fetcher('galleries');
+        setGalleries(data || []);
       } catch (error) {
-        console.error('Error loading gallery:', error);
-        alert('Error loading gallery items');
+        console.error('Error loading galleries:', error);
+        setGalleries([]);
       } finally {
         setLoading(false);
       }
     }
-    loadGallery();
+
+    loadGalleries();
   }, []);
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this gallery item? This action cannot be undone.')) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/gallery/${id}`, { 
-        method: 'DELETE' 
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete gallery item');
-      }
-      
-      // Remove the item from state instead of reloading
-      setItems(items.filter(item => item.id !== id));
-    } catch (error) {
-      console.error('Error deleting gallery item:', error);
-      alert('Error deleting gallery item');
-    }
-  }
+  const categories = [...new Set(galleries.map(gallery => gallery.category).filter(Boolean))];
 
-  const getMediaIcon = (mediaType) => {
-    switch (mediaType?.toLowerCase()) {
-      case 'image':
-        return <Image size={20} className="text-green-600" />;
-      case 'video':
-        return <Video size={20} className="text-red-600" />;
-      case 'document':
-        return <FileText size={20} className="text-blue-600" />;
-      default:
-        return <File size={20} className="text-gray-600" />;
-    }
-  };
-
-  const getMediaPreview = (item) => {
-    if (item.media_type?.toLowerCase() === 'image') {
-      return (
-        <div className="relative group">
-          <img 
-            src={item.media_url} 
-            alt={item.title}
-            className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-            onError={(e) => {
-              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iOCIgZmlsbD0iI0YzRjRGNSIvPgo8cGF0aCBkPSJNMzIgMzZMMzYgNDBINjhWNjRIMFY0MEgyNEwyOCAzNloiIGZpbGw9IiNEOEQ5REEiLz4KPHBhdGggZD0iTTQwIDI0QzQwIDI3LjMxMzcgMzcuMzEzNyAzMCAzNCAzMEMzMC42ODYzIDMwIDI4IDI3LjMxMzcgMjggMjRDMjggMjAuNjg2MyAzMC42ODYzIDE4IDM0IDE4QzM3LjMxMzcgMTggNDAgMjAuNjg2MyA0MCAyNFoiIGZpbGw9IiNEOEQ5REEiLz4KPC9zdmc+';
-            }}
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <Eye size={16} className="text-white" />
-          </div>
-        </div>
-      );
-    } else if (item.media_type?.toLowerCase() === 'video') {
-      return (
-        <div className="relative group">
-          <div className="w-16 h-16 bg-red-50 rounded-lg border border-red-200 flex items-center justify-center">
-            <Video size={24} className="text-red-400" />
-          </div>
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <Play size={16} className="text-white" />
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="w-16 h-16 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-center">
-          <FileText size={24} className="text-blue-400" />
-        </div>
-      );
-    }
-  };
-
-  const filteredItems = filter === 'all' 
-    ? items 
-    : items.filter(item => item.media_type?.toLowerCase() === filter);
-
-  const mediaTypeCounts = {
-    all: items.length,
-    image: items.filter(item => item.media_type?.toLowerCase() === 'image').length,
-    video: items.filter(item => item.media_type?.toLowerCase() === 'video').length,
-    document: items.filter(item => item.media_type?.toLowerCase() === 'document').length,
-  };
+  const filteredGalleries = galleries.filter(gallery => {
+    const matchesSearch = gallery.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         gallery.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         gallery.tags?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || gallery.status === filterStatus;
+    const matchesCategory = filterCategory === 'all' || gallery.category === filterCategory;
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading gallery...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading galleries...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Gallery Management</h1>
-            <p className="text-gray-600">Manage images, videos, and documents in your media library</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg"
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+            <Image className="w-8 h-8 text-pink-500" />
+            <span>Galleries</span>
+          </h1>
+          <p className="text-gray-400 mt-2">Manage photo galleries and media collections</p>
+        </div>
+        
+        <Link href="/admin/galleries/create">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            🏠 Dashboard Home
-          </button>
-        </div>
+            <Plus className="w-5 h-5" />
+            <span>Create Gallery</span>
+          </motion.button>
+        </Link>
+      </motion.div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <h2 className="text-2xl font-semibold text-gray-800">Media Library</h2>
-            <Link 
-              href="/admin/gallery/create" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 w-full lg:w-auto"
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search galleries..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-300 appearance-none"
             >
-              <span>+</span>
-              <span>Add New Media</span>
-            </Link>
+              <option value="all">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="relative">
+            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
+      </motion.div>
 
-        {/* Filter Tabs */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-          <div className="flex space-x-1 overflow-x-auto">
-            {[
-              { key: 'all', label: 'All Media', count: mediaTypeCounts.all },
-              { key: 'image', label: 'Images', count: mediaTypeCounts.image },
-              { key: 'video', label: 'Videos', count: mediaTypeCounts.video },
-              { key: 'document', label: 'Documents', count: mediaTypeCounts.document },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setFilter(tab.key)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition duration-200 whitespace-nowrap ${
-                  filter === tab.key
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  filter === tab.key ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-700'
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Gallery Items */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {filteredItems.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📁</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {filter === 'all' ? 'No media items found' : `No ${filter} items found`}
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {filter === 'all' 
-                  ? 'Get started by adding your first media item' 
-                  : `No ${filter} items in your gallery yet`
-                }
-              </p>
-              <Link 
-                href="/admin/gallery/create" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-block"
-              >
-                Add Media Item
+      {/* Galleries Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredGalleries.length > 0 ? (
+          filteredGalleries.map((gallery, index) => (
+            <GalleryCard key={gallery.id} gallery={gallery} index={index} />
+          ))
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full text-center py-12"
+          >
+            <Image className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No galleries found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || filterStatus !== 'all' || filterCategory !== 'all'
+                ? 'Try adjusting your search or filters' 
+                : 'Create your first gallery to get started'
+              }
+            </p>
+            {!searchTerm && filterStatus === 'all' && filterCategory === 'all' && (
+              <Link href="/admin/galleries/create">
+                <button className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  Create Gallery
+                </button>
               </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Media
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Details
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      URL
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getMediaPreview(item)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">{item.title}</div>
-                        {item.description && (
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {item.description}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          {getMediaIcon(item.media_type)}
-                          <span className="text-sm text-gray-700 capitalize">
-                            {item.media_type || 'Unknown'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <a 
-                          href={item.media_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1 group"
-                        >
-                          <span className="truncate max-w-xs">View Media</span>
-                          <ExternalLink size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                        </a>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
-                          {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-3">
-                          <Link
-                            href={`/admin/gallery/edit/${item.id}`}
-                            className="text-blue-600 hover:text-blue-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>✏️</span>
-                            <span>Edit</span>
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="text-red-600 hover:text-red-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>🗑️</span>
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {items.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-600">{items.length}</div>
-                <div className="text-sm text-blue-800">Total Items</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">{mediaTypeCounts.image}</div>
-                <div className="text-sm text-green-800">Images</div>
-              </div>
-              <div className="bg-red-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-red-600">{mediaTypeCounts.video}</div>
-                <div className="text-sm text-red-800">Videos</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-600">{mediaTypeCounts.document}</div>
-                <div className="text-sm text-purple-800">Documents</div>
-              </div>
-            </div>
-          </div>
+            )}
+          </motion.div>
         )}
       </div>
     </div>

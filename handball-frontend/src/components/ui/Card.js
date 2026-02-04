@@ -7,8 +7,8 @@ const Card = forwardRef(({ className, hover = true, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "card-base",
-      hover && "card-hover",
+      "bg-card text-card-foreground border border-border rounded-xl shadow-sm transition-all duration-300",
+      hover && "hover:shadow-lg hover:-translate-y-1",
       className
     )}
     {...props}
@@ -28,7 +28,7 @@ CardHeader.displayName = "CardHeader";
 const CardTitle = forwardRef(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
+    className={cn("font-semibold leading-none tracking-tight text-foreground", className)}
     {...props}
   />
 ));

@@ -1,218 +1,232 @@
-'use client'
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Trophy, 
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  Eye,
+  Calendar,
+  Users,
+  Flag,
+  MapPin
+} from 'lucide-react';
+import { fetcher } from '@/lib/api';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const LeagueCard = ({ league, index }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <Trophy className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
+              {league.name}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {league.division || 'League'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Link href={`/admin/leagues/${league.id}`}>
+            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+              <Eye className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link href={`/admin/leagues/${league.id}/edit`}>
+            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+              <Edit className="w-4 h-4" />
+            </button>
+          </Link>
+          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
-export default function AdminLeagues() {
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Calendar className="w-4 h-4" />
+          <span>
+            Season {league.season || new Date().getFullYear()}
+          </span>
+        </div>
+        
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <Flag className="w-4 h-4" />
+          <span>{league.tournament?.name || 'Independent League'}</span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Users className="w-4 h-4" />
+            <span>{league.teams_count || 0} Teams</span>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            league.status === 'active' 
+              ? 'bg-green-500/20 text-green-400' 
+              : league.status === 'completed'
+              ? 'bg-blue-500/20 text-blue-400'
+              : 'bg-yellow-500/20 text-yellow-400'
+          }`}>
+            {league.status || 'upcoming'}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function LeaguesPage() {
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     async function loadLeagues() {
       try {
-        const response = await fetch(`${API_URL}/leagues`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch leagues');
-        }
-        const data = await response.json();
-        setLeagues(data);
+        const data = await fetcher('leagues');
+        setLeagues(data || []);
       } catch (error) {
         console.error('Error loading leagues:', error);
-        alert('Error loading leagues');
+        setLeagues([]);
       } finally {
         setLoading(false);
       }
     }
+
     loadLeagues();
   }, []);
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this league? This action cannot be undone.')) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/leagues/${id}`, { 
-        method: 'DELETE' 
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete league');
-      }
-      
-      // Remove the league from state instead of reloading
-      setLeagues(leagues.filter(league => league.id !== id));
-    } catch (error) {
-      console.error('Error deleting league:', error);
-      alert('Error deleting league');
-    }
-  }
+  const filteredLeagues = leagues.filter(league => {
+    const matchesSearch = league.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         league.division?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || league.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading leagues...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading leagues...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">League Management</h1>
-            <p className="text-gray-600">Create, edit, and manage your leagues</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg"
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+            <Trophy className="w-8 h-8 text-blue-500" />
+            <span>Leagues</span>
+          </h1>
+          <p className="text-gray-400 mt-2">Manage league competitions</p>
+        </div>
+        
+        <Link href="/admin/leagues/create">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            🏠 Dashboard Home
-          </button>
-        </div>
+            <Plus className="w-5 h-5" />
+            <span>Create League</span>
+          </motion.button>
+        </Link>
+      </motion.div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-800">All Leagues</h2>
-            <Link 
-              href="/admin/leagues/create" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
+      >
+        <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search leagues..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 appearance-none"
             >
-              <span>+</span>
-              <span>Create New League</span>
-            </Link>
+              <option value="all">All Status</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
         </div>
+      </motion.div>
 
-        {/* Leagues Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {leagues.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">🏆</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No leagues found</h3>
-              <p className="text-gray-500 mb-6">Get started by creating your first league</p>
-              <Link 
-                href="/admin/leagues/create" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-block"
-              >
-                Create League
+      {/* Leagues Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredLeagues.length > 0 ? (
+          filteredLeagues.map((league, index) => (
+            <LeagueCard key={league.id} league={league} index={index} />
+          ))
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full text-center py-12"
+          >
+            <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No leagues found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Try adjusting your search or filters' 
+                : 'Create your first league to get started'
+              }
+            </p>
+            {!searchTerm && filterStatus === 'all' && (
+              <Link href="/admin/leagues/create">
+                <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  Create League
+                </button>
               </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      League Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Tournament
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Teams Count
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {leagues.map((league) => (
-                    <tr key={league.id} className="hover:bg-gray-50 transition duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="text-sm font-semibold text-gray-900">{league.name}</div>
-                          {league.teams && league.teams.length > 0 && (
-                            <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                              {league.teams.length} teams
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {league.tournament ? (
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-900 font-medium">
-                              {league.tournament.name}
-                            </span>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              {new Date(league.tournament.start_date).toLocaleDateString()}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-gray-500 italic">No tournament</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">
-                          {league.teams ? league.teams.length : 0} teams
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-3">
-                          <Link
-                            href={`/admin/leagues/edit/${league.id}`}
-                            className="text-blue-600 hover:text-blue-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>✏️</span>
-                            <span>Edit</span>
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(league.id)}
-                            className="text-red-600 hover:text-red-900 font-semibold transition duration-150 flex items-center space-x-1"
-                          >
-                            <span>🗑️</span>
-                            <span>Delete</span>
-                          </button>
-                          {league.teams && league.teams.length > 0 && (
-                            <Link
-                              href={`/admin/leagues/${league.id}/teams`}
-                              className="text-green-600 hover:text-green-900 font-semibold transition duration-150 flex items-center space-x-1"
-                            >
-                              <span>👥</span>
-                              <span>Teams</span>
-                            </Link>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {leagues.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-600">{leagues.length}</div>
-                <div className="text-sm text-blue-800">Total Leagues</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {leagues.filter(l => l.tournament).length}
-                </div>
-                <div className="text-sm text-green-800">With Tournaments</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-600">
-                  {leagues.reduce((total, league) => total + (league.teams ? league.teams.length : 0), 0)}
-                </div>
-                <div className="text-sm text-purple-800">Total Teams</div>
-              </div>
-            </div>
-          </div>
+            )}
+          </motion.div>
         )}
       </div>
     </div>
