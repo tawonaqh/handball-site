@@ -3,29 +3,44 @@
 
 const ADMIN_CREDENTIALS = {
   username: 'admin',
+  email: 'admin@handball263.com',
   password: 'admin'
 };
 
 const AUTH_KEY = 'admin_auth';
 
-export function login(username, password) {
-  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+export async function login(emailOrUsername, password) {
+  // Allow login with either email or username
+  const isValidCredentials = (
+    (emailOrUsername === ADMIN_CREDENTIALS.username || emailOrUsername === ADMIN_CREDENTIALS.email) &&
+    password === ADMIN_CREDENTIALS.password
+  );
+
+  if (isValidCredentials) {
     const authData = {
-      username: username,
+      username: ADMIN_CREDENTIALS.username,
+      email: ADMIN_CREDENTIALS.email,
       loggedIn: true,
       timestamp: Date.now()
     };
+    
     if (typeof window !== 'undefined') {
       localStorage.setItem(AUTH_KEY, JSON.stringify(authData));
+      // Also set cookie for middleware
+      document.cookie = `admin_auth=${JSON.stringify(authData)}; path=/; max-age=${24 * 60 * 60}`;
     }
-    return { success: true };
+    
+    return true;
   }
-  return { success: false, error: 'Invalid username or password' };
+  
+  return false;
 }
 
 export function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(AUTH_KEY);
+    // Also remove cookie
+    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   }
 }
 
