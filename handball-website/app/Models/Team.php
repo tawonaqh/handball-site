@@ -25,4 +25,9 @@ class Team extends Model
     {
         return $this->hasOne(Ranking::class)->select(['id', 'team_id', 'points', 'league_id']);
     }
+
+    public function standings()
+    {
+        return $this->hasMany(TeamStanding::class);
+    }
 }

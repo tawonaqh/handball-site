@@ -14,10 +14,22 @@ class Game extends Model
         'home_team_id',
         'away_team_id',
         'match_date',
+        'match_time',
+        'venue',
+        'round',
         'home_score',
         'away_score',
         'status',
-        'referee_id'
+        'referee_id',
+        'live_data',
+        'duration',
+        'completed_at'
+    ];
+
+    protected $casts = [
+        'live_data' => 'array',
+        'match_date' => 'date',
+        'completed_at' => 'datetime'
     ];
 
     public function referee()

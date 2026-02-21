@@ -9,10 +9,15 @@ class Player extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'team_id', 'position', 'bio', 'goals', 'assists', 'matches_played'];
+    protected $fillable = ['name', 'team_id', 'position', 'jersey_number', 'bio', 'goals', 'assists', 'matches_played'];
 
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function stats()
+    {
+        return $this->hasMany(PlayerStat::class);
     }
 }

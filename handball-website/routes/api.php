@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\RankingController;
 use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\RefereeController;
+use App\Http\Controllers\Api\LiveMatchController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -106,3 +107,11 @@ Route::prefix('referees')->group(function () {
     Route::delete('/{id}', [RefereeController::class, 'destroy']);
     Route::get('/tournament/{tournamentId}', [RefereeController::class, 'getByTournament']);
 });
+
+// Live Match Tracking Routes
+Route::get('games/{id}/live', [LiveMatchController::class, 'getLiveMatch']);
+Route::get('games/{id}/init', [LiveMatchController::class, 'getMatchInitData']);
+Route::post('games/{id}/live-update', [LiveMatchController::class, 'updateLiveMatch']);
+Route::post('games/{id}/finalize', [LiveMatchController::class, 'finalizeMatch']);
+Route::get('leagues/{id}/standings', [LiveMatchController::class, 'getLeagueStandings']);
+Route::get('rankings/players', [LiveMatchController::class, 'getPlayerRankings']);

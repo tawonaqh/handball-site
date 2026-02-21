@@ -21,18 +21,22 @@ class CreateRefereesTable extends Migration
             $table->timestamps();
         });
 
-        // Add referee_id to games table
-        Schema::table('games', function (Blueprint $table) {
-            $table->foreignId('referee_id')->nullable()->constrained()->onDelete('set null');
-        });
+        // Add referee_id to games table if it doesn't exist
+        if (!Schema::hasColumn('games', 'referee_id')) {
+            Schema::table('games', function (Blueprint $table) {
+                $table->foreignId('referee_id')->nullable()->constrained()->onDelete('set null');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('games', function (Blueprint $table) {
-            $table->dropForeign(['referee_id']);
-            $table->dropColumn('referee_id');
-        });
+        if (Schema::hasColumn('games', 'referee_id')) {
+            Schema::table('games', function (Blueprint $table) {
+                $table->dropForeign(['referee_id']);
+                $table->dropColumn('referee_id');
+            });
+        }
         
         Schema::dropIfExists('referees');
     }

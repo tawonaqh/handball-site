@@ -5,6 +5,7 @@ import { fetcher } from "@/lib/api";
 import { motion } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from "react-icons/fa";
 import { IoStatsChart } from "react-icons/io5";
+import Link from "next/link";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
@@ -17,7 +18,16 @@ export default function FixturesPage() {
     async function fetchFixtures() {
       try {
         const data = await fetcher("games");
-        setFixtures(data || []);
+        // Sort fixtures: live first, then by date (newest first)
+        const sortedData = (data || []).sort((a, b) => {
+          // Live matches always on top
+          if (a.status === 'live' && b.status !== 'live') return -1;
+          if (b.status === 'live' && a.status !== 'live') return 1;
+          
+          // Then sort by date (newest first)
+          return new Date(b.match_date) - new Date(a.match_date);
+        });
+        setFixtures(sortedData);
       } catch (error) {
         console.error("Error fetching fixtures:", error);
         setError(error.message);
@@ -81,7 +91,11 @@ export default function FixturesPage() {
                     <div className="flex items-center space-x-2">
                       <FaCalendarAlt className="text-orange-500" />
                       <span className="text-gray-600">
-                        {new Date(fixture.date).toLocaleDateString()}
+                        {new Date(fixture.match_date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
                       </span>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(fixture.status)}`}>
@@ -107,7 +121,12 @@ export default function FixturesPage() {
                       <div className="text-2xl font-bold text-gray-400 mb-2">VS</div>
                       <div className="flex items-center justify-center space-x-2 text-gray-600">
                         <FaClock className="w-4 h-4" />
-                        <span>{fixture.time || '15:00'}</span>
+                        <span>
+                          {new Date(fixture.match_date).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </span>
                       </div>
                       {fixture.venue && (
                         <div className="flex items-center justify-center space-x-2 text-gray-600 mt-1">
@@ -130,14 +149,29 @@ export default function FixturesPage() {
                     </div>
                   </div>
                   
-                  {fixture.league && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-center space-x-2 text-gray-600">
-                        <IoStatsChart className="w-4 h-4" />
-                        <span className="text-sm">{fixture.league.name}</span>
-                      </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      {fixture.league && (
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <IoStatsChart className="w-4 h-4" />
+                          <span className="text-sm">{fixture.league.name}</span>
+                        </div>
+                      )}
+                      
+                      {fixture.status === 'live' && (
+                        <Link href={`/fixtures/${fixture.id}/live`}>
+                          <button className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-300 animate-pulse">
+                            <span className="w-2 h-2 bg-white rounded-full"></span>
+                            <span>Watch Live</span>
+                          </button>
+                        </Link>
+                      )}
+                      
+                      {fixture.status === 'scheduled' && (
+                        <span className="text-sm text-gray-500">Upcoming</span>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </motion.div>
             ))}

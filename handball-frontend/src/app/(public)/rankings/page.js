@@ -9,30 +9,47 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 export default function RankingsPage() {
-  const [rankings, setRankings] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [standings, setStandings] = useState([]);
+  const [leagues, setLeagues] = useState([]);
+  const [selectedLeague, setSelectedLeague] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchRankings() {
+    async function fetchData() {
       try {
-        const [rankingsData, teamsData] = await Promise.all([
-          fetcher("rankings"),
-          fetcher("teams")
-        ]);
-        setRankings(rankingsData || []);
-        setTeams(teamsData?.sort((a, b) => (b.ranking?.points || 0) - (a.ranking?.points || 0)) || []);
+        const leaguesData = await fetcher("leagues");
+        setLeagues(leaguesData || []);
+        
+        // Select first league by default
+        if (leaguesData && leaguesData.length > 0) {
+          setSelectedLeague(leaguesData[0].id);
+        }
       } catch (error) {
-        console.error("Error fetching rankings:", error);
+        console.error("Error fetching leagues:", error);
         setError(error.message);
       } finally {
         setLoading(false);
       }
     }
     
-    fetchRankings();
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    async function fetchStandings() {
+      if (!selectedLeague) return;
+      
+      try {
+        const standingsData = await fetcher(`leagues/${selectedLeague}/standings`);
+        setStandings(standingsData || []);
+      } catch (error) {
+        console.error("Error fetching standings:", error);
+      }
+    }
+    
+    fetchStandings();
+  }, [selectedLeague]);
 
   if (loading) return <LoadingSpinner message="Loading rankings..." />;
   if (error) return <ErrorBoundary error={error} retry={() => window.location.reload()} />;
@@ -67,6 +84,21 @@ export default function RankingsPage() {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               See how teams rank across all leagues and competitions
             </p>
+
+            {/* League Selector */}
+            {leagues.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <select
+                  value={selectedLeague || ''}
+                  onChange={(e) => setSelectedLeague(parseInt(e.target.value))}
+                  className="px-6 py-3 bg-white border-2 border-orange-500 rounded-xl text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  {leagues.map(league => (
+                    <option key={league.id} value={league.id}>{league.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </motion.div>
 
           {/* Rankings Table */}
@@ -92,9 +124,9 @@ export default function RankingsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {teams.map((team, index) => (
+                  {standings.map((standing, index) => (
                     <motion.tr
-                      key={team.id}
+                      key={standing.team.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -102,13 +134,13 @@ export default function RankingsPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getBadgeColor(index + 1)}`}>
-                            {index + 1}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getBadgeColor(standing.rank)}`}>
+                            {standing.rank}
                           </div>
-                          {index < 3 && (
+                          {standing.rank <= 3 && (
                             <FaTrophy className={`w-4 h-4 ${
-                              index === 0 ? 'text-yellow-500' :
-                              index === 1 ? 'text-gray-400' :
+                              standing.rank === 1 ? 'text-yellow-500' :
+                              standing.rank === 2 ? 'text-gray-400' :
                               'text-orange-500'
                             }`} />
                           )}
@@ -116,31 +148,30 @@ export default function RankingsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-lg font-semibold text-gray-900">{team.name}</div>
-                          <div className="text-sm text-gray-500">{team.league?.name || 'Independent'}</div>
+                          <div className="text-lg font-semibold text-gray-900">{standing.team.name}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="text-2xl font-bold text-orange-600">
-                          {team.ranking?.points || 0}
+                          {standing.points}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center text-gray-900">
-                        {team.matches_played || 0}
+                        {standing.gamesPlayed}
                       </td>
                       <td className="px-6 py-4 text-center text-green-600 font-semibold">
-                        {team.wins || 0}
+                        {standing.wins}
                       </td>
                       <td className="px-6 py-4 text-center text-red-600 font-semibold">
-                        {team.losses || 0}
+                        {standing.losses}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className={`font-semibold ${
-                          (team.goal_difference || 0) > 0 ? 'text-green-600' :
-                          (team.goal_difference || 0) < 0 ? 'text-red-600' :
+                          standing.goalDifference > 0 ? 'text-green-600' :
+                          standing.goalDifference < 0 ? 'text-red-600' :
                           'text-gray-600'
                         }`}>
-                          {team.goal_difference > 0 ? '+' : ''}{team.goal_difference || 0}
+                          {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
                         </div>
                       </td>
                     </motion.tr>
@@ -150,7 +181,7 @@ export default function RankingsPage() {
             </div>
           </div>
 
-          {teams.length === 0 && (
+          {standings.length === 0 && selectedLeague && (
             <div className="text-center py-20">
               <IoStatsChart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600 mb-2">No rankings available</h3>

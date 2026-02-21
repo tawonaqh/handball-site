@@ -56,15 +56,19 @@ const GameCard = ({ game, index }) => {
             <Calendar className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
-              {game.home_team?.name || 'Team A'} vs {game.away_team?.name || 'Team B'}
-            </h3>
             <p className="text-sm text-gray-400">
               {game.league?.name || 'Match'}
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {(game.status === 'scheduled' || game.status === 'live') && (
+            <Link href={`/admin/games/${game.id}/live`}>
+              <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors" title="Live Tracking">
+                <PlayCircle className="w-4 h-4" />
+              </button>
+            </Link>
+          )}
           <Link href={`/admin/games/${game.id}`}>
             <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
               <Eye className="w-4 h-4" />
@@ -80,6 +84,10 @@ const GameCard = ({ game, index }) => {
           </button>
         </div>
       </div>
+
+      <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors mb-4">
+        {game.home_team?.name || 'Team A'} <span className="text-gray-500">vs</span> {game.away_team?.name || 'Team B'}
+      </h3>
 
       <div className="space-y-3">
         <div className="flex items-center space-x-2 text-sm text-gray-400">

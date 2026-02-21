@@ -15,7 +15,7 @@ class GameController extends Controller
     }
 
     public function show($id) {
-        return Game::with(['league', 'homeTeam', 'awayTeam', 'referee'])->findOrFail($id);
+        return Game::with(['league', 'homeTeam.players', 'awayTeam.players', 'referee'])->findOrFail($id);
     }
 
     public function store(Request $request) {
