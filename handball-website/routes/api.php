@@ -14,10 +14,16 @@ use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\RefereeController;
 use App\Http\Controllers\Api\LiveMatchController;
+use App\Http\Controllers\Api\ImageUploadController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Image Upload Routes
+Route::post('upload/image', [ImageUploadController::class, 'upload']);
+Route::post('upload/images', [ImageUploadController::class, 'uploadMultiple']);
+Route::delete('upload/image', [ImageUploadController::class, 'delete']);
 
 Route::prefix('leagues')->group(function () {
     Route::get('/', [LeagueController::class, 'index']);

@@ -24,61 +24,73 @@ const PlayerCard = ({ player, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300 group"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-            <User className="w-6 h-6 text-white" />
+      {/* Player Photo */}
+      <div className="relative h-48 bg-gradient-to-br from-purple-500/20 to-purple-600/20 overflow-hidden">
+        {player.photo_url ? (
+          <img
+            src={player.photo_url}
+            alt={player.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <User className="w-16 h-16 text-purple-500/50" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
-              {player.name}
-            </h3>
-            <p className="text-sm text-gray-400">
-              {player.position || 'Player'}
-            </p>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-lg font-semibold text-white">
+            {player.name}
+          </h3>
+          <p className="text-sm text-gray-300">
+            {player.position || 'Player'}
+          </p>
+        </div>
+        {player.jersey_number && (
+          <div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-purple-500/80 backdrop-blur-sm flex items-center justify-center">
+            <span className="text-white font-bold text-lg">#{player.jersey_number}</span>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link href={`/admin/players/${player.id}`}>
-            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
-              <Eye className="w-4 h-4" />
-            </button>
-          </Link>
-          <Link href={`/admin/players/${player.id}/edit`}>
-            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
-              <Edit className="w-4 h-4" />
-            </button>
-          </Link>
-          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        )}
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Hash className="w-4 h-4" />
-          <span>Jersey #{player.jersey_number || 'N/A'}</span>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Users className="w-4 h-4" />
-          <span>Team: {player.team?.name || 'Not assigned'}</span>
+      {/* Content */}
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Users className="w-4 h-4" />
+            <span>{player.team?.name || 'No team'}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Link href={`/admin/players/${player.id}`}>
+              <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                <Eye className="w-4 h-4" />
+              </button>
+            </Link>
+            <Link href={`/admin/players/${player.id}/edit`}>
+              <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                <Edit className="w-4 h-4" />
+              </button>
+            </Link>
+            <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Calendar className="w-4 h-4" />
-          <span>Age: {player.age || 'N/A'}</span>
-        </div>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Calendar className="w-4 h-4" />
+            <span>Age: {player.age || 'N/A'}</span>
+          </div>
 
-        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <MapPin className="w-4 h-4" />
             <span>{player.nationality || 'N/A'}</span>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+
+          <div className={`px-3 py-1 rounded-full text-xs font-medium text-center ${
             player.status === 'active' 
               ? 'bg-green-500/20 text-green-400' 
               : player.status === 'injured'

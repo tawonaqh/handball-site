@@ -33,81 +33,95 @@ const NewsCard = ({ article, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300 group"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
-            <Newspaper className="w-6 h-6 text-white" />
+      {/* Featured Image */}
+      <div className="relative h-48 bg-gray-700/50 overflow-hidden">
+        {article.image_url ? (
+          <img
+            src={article.image_url}
+            alt={article.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Newspaper className="w-16 h-16 text-gray-500" />
           </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors line-clamp-2">
-              {article.title}
-            </h3>
-            <p className="text-sm text-gray-400">
-              {article.category || 'News'}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link href={`/admin/news/${article.id}`}>
-            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
-              <Eye className="w-4 h-4" />
-            </button>
-          </Link>
-          <Link href={`/admin/news/${article.id}/edit`}>
-            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
-              <Edit className="w-4 h-4" />
-            </button>
-          </Link>
-          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
-            <Trash2 className="w-4 h-4" />
-          </button>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-lg font-semibold text-white line-clamp-2">
+            {article.title}
+          </h3>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-sm text-gray-300 line-clamp-3">
-          {article.excerpt || article.content?.substring(0, 150) + '...' || 'No excerpt available'}
-        </p>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Calendar className="w-4 h-4" />
-          <span>
-            {article.published_at 
-              ? new Date(article.published_at).toLocaleDateString()
-              : article.created_at 
-              ? new Date(article.created_at).toLocaleDateString()
-              : 'No date'
-            }
-          </span>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <User className="w-4 h-4" />
-          <span>By {article.author || 'Admin'}</span>
+      {/* Content */}
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-400">
+            {article.category || 'News'}
+          </p>
+          <div className="flex items-center space-x-2">
+            <Link href={`/admin/news/${article.id}`}>
+              <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                <Eye className="w-4 h-4" />
+              </button>
+            </Link>
+            <Link href={`/admin/news/${article.id}/edit`}>
+              <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                <Edit className="w-4 h-4" />
+              </button>
+            </Link>
+            <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {article.tags && (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-300 line-clamp-3">
+            {article.excerpt || article.content?.substring(0, 150) + '...' || 'No excerpt available'}
+          </p>
+          
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Tag className="w-4 h-4" />
-            <div className="flex flex-wrap gap-1">
-              {article.tags.split(',').slice(0, 3).map((tag, i) => (
-                <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs">
-                  {tag.trim()}
-                </span>
-              ))}
+            <Calendar className="w-4 h-4" />
+            <span>
+              {article.published_at 
+                ? new Date(article.published_at).toLocaleDateString()
+                : article.created_at 
+                ? new Date(article.created_at).toLocaleDateString()
+                : 'No date'
+              }
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <User className="w-4 h-4" />
+            <span>By {article.author || 'Admin'}</span>
+          </div>
+
+          {article.tags && (
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Tag className="w-4 h-4" />
+              <div className="flex flex-wrap gap-1">
+                {article.tags.split(',').slice(0, 3).map((tag, i) => (
+                  <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Clock className="w-4 h-4" />
-            <span>{article.read_time || '5'} min read</span>
-          </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(article.status)}`}>
-            {article.status || 'draft'}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Clock className="w-4 h-4" />
+              <span>{article.read_time || '5'} min read</span>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(article.status)}`}>
+              {article.status || 'draft'}
+            </div>
           </div>
         </div>
       </div>

@@ -44,75 +44,77 @@ const RefereeCard = ({ referee, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300 group"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-            <Scale className="w-6 h-6 text-white" />
+      {/* Referee Photo */}
+      <div className="relative h-48 bg-gradient-to-br from-teal-500/20 to-teal-600/20 overflow-hidden">
+        {referee.photo_url ? (
+          <img
+            src={referee.photo_url}
+            alt={referee.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Scale className="w-16 h-16 text-teal-500/50" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
-              {referee.name}
-            </h3>
-            <p className="text-sm text-gray-400">
-              {referee.certification_level || 'Referee'}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link href={`/admin/referees/${referee.id}`}>
-            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
-              <Eye className="w-4 h-4" />
-            </button>
-          </Link>
-          <Link href={`/admin/referees/${referee.id}/edit`}>
-            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
-              <Edit className="w-4 h-4" />
-            </button>
-          </Link>
-          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
-            <Trash2 className="w-4 h-4" />
-          </button>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-lg font-semibold text-white">
+            {referee.name}
+          </h3>
+          <p className="text-sm text-gray-300">
+            {referee.level || 'Referee'}
+          </p>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Award className="w-4 h-4" />
-          <span>License: {referee.license_number || 'N/A'}</span>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <MapPin className="w-4 h-4" />
-          <span>{referee.location || 'Location not set'}</span>
+      {/* Content */}
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(referee.level)}`}>
+            {referee.level || 'local'}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Link href={`/admin/referees/${referee.id}`}>
+              <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                <Eye className="w-4 h-4" />
+              </button>
+            </Link>
+            <Link href={`/admin/referees/${referee.id}/edit`}>
+              <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                <Edit className="w-4 h-4" />
+              </button>
+            </Link>
+            <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Calendar className="w-4 h-4" />
-          <span>Experience: {referee.years_experience || 0} years</span>
-        </div>
-
-        {referee.phone && (
+        <div className="space-y-3">
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Phone className="w-4 h-4" />
-            <span>{referee.phone}</span>
+            <Award className="w-4 h-4" />
+            <span>License: {referee.license_number || 'N/A'}</span>
           </div>
-        )}
 
-        {referee.email && (
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Mail className="w-4 h-4" />
-            <span>{referee.email}</span>
-          </div>
-        )}
+          {referee.phone && (
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Phone className="w-4 h-4" />
+              <span>{referee.phone}</span>
+            </div>
+          )}
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(referee.certification_level)}`}>
-            {referee.certification_level || 'local'}
-          </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(referee.status)}`}>
-            {referee.status || 'inactive'}
+          {referee.email && (
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Mail className="w-4 h-4" />
+              <span className="truncate">{referee.email}</span>
+            </div>
+          )}
+
+          <div className={`px-3 py-1 rounded-full text-xs font-medium text-center ${getStatusColor(referee.is_active ? 'active' : 'inactive')}`}>
+            {referee.is_active ? 'Active' : 'Inactive'}
           </div>
         </div>
       </div>

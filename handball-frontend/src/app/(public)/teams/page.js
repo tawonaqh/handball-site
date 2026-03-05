@@ -67,25 +67,58 @@ export default function TeamsPage() {
                 transition={{ delay: index * 0.1 }}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100"
               >
-                <div className="relative h-48 bg-gradient-to-br from-orange-500 to-yellow-400">
-                  {/* Ranking badge */}
-                  {index < 3 && (
-                    <div className="absolute top-4 right-4">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                        index === 0 ? 'bg-yellow-500' :
-                        index === 1 ? 'bg-gray-400' :
-                        'bg-orange-600'
-                      }`}>
-                        {index + 1}
-                      </div>
+                <div className="relative h-48 bg-gradient-to-br from-orange-500 to-yellow-400 overflow-hidden">
+                  {team.logo_url ? (
+                    <div className="w-full h-full bg-white p-4">
+                      <img
+                        src={team.logo_url}
+                        alt={team.name}
+                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                      />
                     </div>
+                  ) : (
+                    <>
+                      {/* Ranking badge */}
+                      {index < 3 && (
+                        <div className="absolute top-4 right-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                            index === 0 ? 'bg-yellow-500' :
+                            index === 1 ? 'bg-gray-400' :
+                            'bg-orange-600'
+                          }`}>
+                            {index + 1}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
+                      <div className="absolute bottom-4 left-4 text-white">
+                        <h3 className="text-2xl font-bold mb-2">{team.name}</h3>
+                        <p className="text-white/90 text-sm">{team.league?.name || "Independent"}</p>
+                      </div>
+                    </>
                   )}
                   
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="text-2xl font-bold mb-2">{team.name}</h3>
-                    <p className="text-white/90 text-sm">{team.league?.name || "Independent"}</p>
-                  </div>
+                  {team.logo_url && (
+                    <>
+                      {/* Ranking badge for teams with logos */}
+                      {index < 3 && (
+                        <div className="absolute top-4 right-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                            index === 0 ? 'bg-yellow-500' :
+                            index === 1 ? 'bg-gray-400' :
+                            'bg-orange-600'
+                          }`}>
+                            {index + 1}
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <h3 className="text-xl font-bold text-white mb-1">{team.name}</h3>
+                        <p className="text-white/90 text-sm">{team.league?.name || "Independent"}</p>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 <div className="p-6">

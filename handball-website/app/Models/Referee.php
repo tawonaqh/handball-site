@@ -17,7 +17,8 @@ class Referee extends Model
         'license_number',
         'level',
         'tournament_id',
-        'is_active'
+        'is_active',
+        'photo_url'
     ];
 
     public function tournament()

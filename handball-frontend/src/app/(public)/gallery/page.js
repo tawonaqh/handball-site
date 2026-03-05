@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { fetcher } from "@/lib/api";
 import { motion } from "framer-motion";
 import { FaImage, FaCalendarAlt, FaEye } from "react-icons/fa";
-import Image from "next/image";
 import Link from "next/link";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
@@ -69,13 +68,27 @@ export default function GalleryPage() {
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100"
               >
                 <div className="relative h-64 bg-gray-200 overflow-hidden">
-                  {gallery.cover_image ? (
-                    <Image
-                      src={gallery.cover_image}
-                      alt={gallery.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+                  {gallery.media_url ? (
+                    gallery.media_type === 'video' ? (
+                      <div className="relative w-full h-full">
+                        <video
+                          src={gallery.media_url}
+                          className="w-full h-full object-cover"
+                          muted
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <div className="w-0 h-0 border-l-8 border-l-white border-y-6 border-y-transparent ml-1" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={gallery.media_url}
+                        alt={gallery.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    )
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center">
                       <FaImage className="w-16 h-16 text-white/50" />
@@ -83,11 +96,11 @@ export default function GalleryPage() {
                   )}
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
                   
-                  {/* Photo count badge */}
+                  {/* Media type badge */}
                   <div className="absolute top-4 right-4">
                     <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
                       <FaImage className="w-3 h-3" />
-                      <span>{gallery.photo_count || 0} photos</span>
+                      <span>{gallery.media_type || 'image'}</span>
                     </div>
                   </div>
                 </div>

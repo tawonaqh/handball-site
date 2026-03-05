@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { fetcher } from "@/lib/api";
 import { motion } from "framer-motion";
 import { FaTrophy, FaCalendarAlt, FaUsers } from "react-icons/fa";
-import TournamentCard from "@/components/cards/TournamentCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
@@ -16,7 +15,7 @@ export default function TournamentsPage() {
   useEffect(() => {
     async function fetchTournaments() {
       try {
-        const data = await fetcher("tournaments");
+        const data = await fetcher("leagues"); // Fetch from leagues endpoint
         setTournaments(data || []);
       } catch (error) {
         console.error("Error fetching tournaments:", error);
@@ -59,8 +58,53 @@ export default function TournamentsPage() {
 
           {/* Tournaments Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {tournaments.map((tournament) => (
-              <TournamentCard key={tournament.id} tournament={tournament} />
+            {tournaments.map((tournament, index) => (
+              <motion.div
+                key={tournament.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100"
+              >
+                <div className="relative h-48 bg-gradient-to-br from-orange-500 to-yellow-400">
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h3 className="text-2xl font-bold mb-2">{tournament.name}</h3>
+                    <p className="text-white/90 text-sm">{tournament.season || "Current Season"}</p>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
+                        {tournament.teams_count || 0}
+                      </div>
+                      <div className="text-sm text-gray-500">Teams</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
+                        {tournament.matches_count || 0}
+                      </div>
+                      <div className="text-sm text-gray-500">Matches</div>
+                    </div>
+                  </div>
+                  
+                  {tournament.description && (
+                    <p className="text-gray-600 text-sm mb-6 line-clamp-2">
+                      {tournament.description}
+                    </p>
+                  )}
+                  
+                  <a
+                    href={`/tournaments/${tournament.id}`}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 group-hover:scale-105"
+                  >
+                    <FaTrophy className="w-4 h-4" />
+                    <span>View Tournament</span>
+                  </a>
+                </div>
+              </motion.div>
             ))}
           </div>
 

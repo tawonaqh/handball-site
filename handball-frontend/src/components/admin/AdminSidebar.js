@@ -39,8 +39,7 @@ export default function AdminSidebar({ collapsed, setCollapsed, mobileOpen, setM
     {
       title: "Competition",
       items: [
-        { name: "Tournaments", href: "/admin/tournaments", icon: Flag },
-        { name: "Leagues", href: "/admin/leagues", icon: Trophy },
+        { name: "Tournaments", href: "/admin/leagues", icon: Trophy },
         { name: "Games", href: "/admin/games", icon: Calendar },
         { name: "Rankings", href: "/admin/rankings", icon: BarChart3 },
       ]

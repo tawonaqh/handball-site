@@ -46,7 +46,7 @@ export default function HeroSection() {
   ];
 
   const stats = [
-    { number: "25+", label: "Active Leagues", icon: FaTrophy, delay: 0.2 },
+    { number: "25+", label: "Active Tournaments", icon: FaTrophy, delay: 0.2 },
     { number: "150+", label: "Teams", icon: FaUsers, delay: 0.4 },
     { number: "500+", label: "Players", icon: FaStar, delay: 0.6 },
     { number: "1000+", label: "Matches", icon: FaCalendarAlt, delay: 0.8 }
@@ -165,7 +165,7 @@ export default function HeroSection() {
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6 md:mb-8"
             >
               <Link
-                href="/viewer/leagues"
+                href="/tournaments"
                 className="group relative bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 transform hover:scale-105 flex items-center space-x-3 overflow-hidden w-full sm:w-auto justify-center max-w-xs"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -175,7 +175,7 @@ export default function HeroSection() {
               </Link>
               
               <Link
-                href="/viewer/rankings"
+                href="/rankings"
                 className="group glass border-2 border-white/40 text-white px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg hover:bg-white/20 hover:border-white/60 transition-all duration-500 flex items-center space-x-3 backdrop-blur-md w-full sm:w-auto justify-center max-w-xs"
               >
                 <IoStatsChart className="group-hover:scale-125 transition-transform duration-300" size={18} />

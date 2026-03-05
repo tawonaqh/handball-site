@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { FaArrowRight, FaCalendarAlt, FaUser } from "react-icons/fa";
 
 export default function NewsCard({ article }) {
@@ -24,11 +23,10 @@ export default function NewsCard({ article }) {
       {/* Featured Image */}
       <div className="relative h-48 bg-gray-200 overflow-hidden">
         {article.image_url ? (
-          <Image
+          <img
             src={article.image_url}
             alt={article.title}
-            fill
-            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center">

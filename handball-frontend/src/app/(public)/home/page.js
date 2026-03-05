@@ -6,7 +6,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaTrophy, FaNewspaper, FaUsers, FaArrowRight } from "react-icons/fa";
 import { IoStatsChart, IoCalendar, IoPerson } from "react-icons/io5";
-import Image from "next/image";
 
 // Components
 import HeroSection from "@/components/sections/HeroSection";
@@ -31,7 +30,7 @@ export default function HomePage() {
     async function fetchData() {
       try {
         const [tournaments, news, players, teams] = await Promise.all([
-          fetcher("tournaments"),
+          fetcher("leagues"), // Fetch from leagues endpoint
           fetcher("news"),
           fetcher("players"),
           fetcher("teams")

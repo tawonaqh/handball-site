@@ -3,23 +3,26 @@ import { Play, Pause, RotateCcw, Plus, Minus, Users, History, Ban, Timer, ArrowL
 import { motion, AnimatePresence } from 'framer-motion';
 
 const generateRoster = (prefix, startId) => [
-  { id: startId + 0, name: `${prefix} Player 1`, number: "1", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 1, name: `${prefix} Player 2`, number: "2", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 2, name: `${prefix} Player 3`, number: "3", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 3, name: `${prefix} Player 4`, number: "4", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 4, name: `${prefix} Player 5`, number: "5", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 5, name: `${prefix} Player 6`, number: "6", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 6, name: `${prefix} Player 7`, number: "7", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 7, name: `${prefix} Sub 1`, number: "10", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 8, name: `${prefix} Sub 2`, number: "11", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 9, name: `${prefix} Sub 3`, number: "12", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 10, name: `${prefix} Sub 4`, number: "13", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 11, name: `${prefix} Sub 5`, number: "14", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 12, name: `${prefix} Sub 6`, number: "15", goals: 0, suspensions: 0, isRedCarded: false },
-  { id: startId + 13, name: `${prefix} Sub 7`, number: "16", goals: 0, suspensions: 0, isRedCarded: false },
+  { id: startId + 0, name: `${prefix} Player 1`, number: "1", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 1, name: `${prefix} Player 2`, number: "2", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 2, name: `${prefix} Player 3`, number: "3", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 3, name: `${prefix} Player 4`, number: "4", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 4, name: `${prefix} Player 5`, number: "5", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 5, name: `${prefix} Player 6`, number: "6", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 6, name: `${prefix} Player 7`, number: "7", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 7, name: `${prefix} Sub 1`, number: "10", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 8, name: `${prefix} Sub 2`, number: "11", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 9, name: `${prefix} Sub 3`, number: "12", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 10, name: `${prefix} Sub 4`, number: "13", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 11, name: `${prefix} Sub 5`, number: "14", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 12, name: `${prefix} Sub 6`, number: "15", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
+  { id: startId + 13, name: `${prefix} Sub 7`, number: "16", goals: 0, yellowCards: 0, suspensions: 0, isRedCarded: false, isBlueCarded: false },
 ];
 
 const LiveMatchTracker = ({ gameId, initialData }) => {
+  const [isSetup, setIsSetup] = useState(!initialData?.time); // Show setup if no initial time
+  const [matchDuration, setMatchDuration] = useState(60); // Default 60 minutes
+  
   const [time, setTime] = useState(initialData?.time || 0);
   const [isRunning, setIsRunning] = useState(false);
   const [teamAName, setTeamAName] = useState(initialData?.teamAName || "Team North");
@@ -35,6 +38,13 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
   const [lastSaved, setLastSaved] = useState(null);
   const [isConnected, setIsConnected] = useState(true);
   
+  // Timeout state
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [timeoutCountdown, setTimeoutCountdown] = useState(null);
+  const [activeTimeoutTeam, setActiveTimeoutTeam] = useState(null);
+  const [timeoutsUsedA, setTimeoutsUsedA] = useState([]);
+  const [timeoutsUsedB, setTimeoutsUsedB] = useState([]);
+  
   // Use ref for counter to avoid stale closure issues
   const logCounterRef = React.useRef(0);
   
@@ -45,20 +55,76 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
 
   const scoreA = useMemo(() => playersA.reduce((sum, p) => sum + p.goals, 0), [playersA]);
   const scoreB = useMemo(() => playersB.reduce((sum, p) => sum + p.goals, 0), [playersB]);
+  
+  // Derived values for halftime/fulltime
+  const halfTimeSeconds = (matchDuration * 60) / 2;
+  const fullTimeSeconds = matchDuration * 60;
+  const currentHalf = time < halfTimeSeconds ? 1 : 2;
+  const isMatchOver = time >= fullTimeSeconds;
+  const isHalftimeReached = time === halfTimeSeconds;
 
-  // Timer Logic
+  // Timer Logic with auto-stop at halftime and fulltime
   useEffect(() => {
     let interval = null;
-    if (isRunning) {
-      interval = setInterval(() => setTime(t => t + 1), 1000);
+    if (isRunning && timeoutCountdown === null) {
+      interval = setInterval(() => {
+        setTime(prevTime => {
+          const nextTime = prevTime + 1;
+          
+          // Auto-stop at Halftime
+          if (nextTime === halfTimeSeconds) {
+            setIsRunning(false);
+            setMatchLog(prev => [{
+              id: generateUniqueId(),
+              time: formatTime(nextTime),
+              player: 'OFFICIAL',
+              team: 'MATCH',
+              type: 'HALFTIME'
+            }, ...prev].slice(0, 10));
+            return nextTime;
+          }
+          
+          // Auto-stop at Full-time
+          if (nextTime === fullTimeSeconds) {
+            setIsRunning(false);
+            setMatchLog(prev => [{
+              id: generateUniqueId(),
+              time: formatTime(nextTime),
+              player: 'OFFICIAL',
+              team: 'MATCH',
+              type: 'FULL TIME'
+            }, ...prev].slice(0, 10));
+            return nextTime;
+          }
+          
+          return nextTime;
+        });
+      }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, timeoutCountdown, halfTimeSeconds, fullTimeSeconds]);
+
+  // Timeout Countdown Timer
+  useEffect(() => {
+    let interval = null;
+    if (timeoutCountdown !== null && timeoutCountdown > 0) {
+      interval = setInterval(() => {
+        setTimeoutCountdown(c => {
+          if (c <= 1) {
+            setActiveTimeoutTeam(null);
+            return null;
+          }
+          return c - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timeoutCountdown]);
 
   // 2 Min Foul Countdown
   useEffect(() => {
     let interval = null;
-    if (activeFouls.length > 0 && isRunning) {
+    if (activeFouls.length > 0 && isRunning && timeoutCountdown === null) {
       interval = setInterval(() => {
         setActiveFouls(prev => prev.map(f => ({
           ...f,
@@ -67,7 +133,7 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [activeFouls, isRunning]);
+  }, [activeFouls, isRunning, timeoutCountdown]);
 
   // Auto-save to backend every 5 seconds when match is running
   useEffect(() => {
@@ -170,11 +236,76 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  
+  const getHalfTimeouts = (usedArray) => {
+    return usedArray.filter(t => currentHalf === 1 ? t < halfTimeSeconds : t >= halfTimeSeconds).length;
+  };
+
+  const getTotalHalfTimeouts = () => {
+    return getHalfTimeouts(timeoutsUsedA) + getHalfTimeouts(timeoutsUsedB);
+  };
+
+  const getTotalMatchTimeouts = () => {
+    return timeoutsUsedA.length + timeoutsUsedB.length;
+  };
+
+  const handleToggleTimer = () => {
+    if (isMatchOver) return;
+    if (isRunning) {
+      setShowPauseModal(true);
+    } else {
+      setIsRunning(true);
+      setTimeoutCountdown(null);
+      setActiveTimeoutTeam(null);
+    }
+  };
+
+  const confirmTimeout = (team) => {
+    const used = team === 'A' ? timeoutsUsedA : timeoutsUsedB;
+    const setUsed = team === 'A' ? setTimeoutsUsedA : setTimeoutsUsedB;
+    const teamName = team === 'A' ? teamAName : teamBName;
+    
+    // Check limits
+    if (getTotalMatchTimeouts() >= 3) return;
+    if (used.length >= 2) return;
+    if (getTotalHalfTimeouts() >= 2) return;
+    
+    setUsed([...used, time]);
+    setIsRunning(false);
+    setTimeoutCountdown(60); // 1 minute timeout
+    setActiveTimeoutTeam(teamName);
+    setShowPauseModal(false);
+    
+    setMatchLog(prev => [{
+      id: generateUniqueId(),
+      time: formatTime(time),
+      player: 'COACH',
+      team: teamName,
+      type: 'TIMEOUT'
+    }, ...prev].slice(0, 10));
+    
+    setTimeout(() => saveMatchState(), 100);
+  };
+
+  const technicalTimeout = () => {
+    setIsRunning(false);
+    setShowPauseModal(false);
+    
+    setMatchLog(prev => [{
+      id: generateUniqueId(),
+      time: formatTime(time),
+      player: 'OFFICIAL',
+      team: 'MATCH',
+      type: 'TECHNICAL TIMEOUT'
+    }, ...prev].slice(0, 10));
+    
+    setTimeout(() => saveMatchState(), 100);
+  };
 
   const isPlayerSuspended = (playerId) => activeFouls.some(f => f.playerId === playerId);
 
   const handleGoal = (team, playerId, delta) => {
-    if (!isRunning) return;
+    if (!isRunning || timeoutCountdown !== null) return;
     if (isPlayerSuspended(playerId)) return;
 
     const update = (players) => players.map(p => {
@@ -198,6 +329,96 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     else setPlayersB(update);
     
     // Instant save after goal
+    setTimeout(() => saveMatchState(), 100);
+  };
+
+  const addYellowCard = (team, player) => {
+    const update = (players) => players.map(p => {
+      if (p.id === player.id) {
+        setMatchLog(prev => [{
+          id: generateUniqueId(),
+          time: formatTime(time),
+          player: p.name,
+          team: team === 'A' ? teamAName : teamBName,
+          type: 'YELLOW CARD'
+        }, ...prev].slice(0, 10));
+
+        return { ...p, yellowCards: p.yellowCards + 1 };
+      }
+      return p;
+    });
+
+    if (team === 'A') setPlayersA(update);
+    else setPlayersB(update);
+    
+    setTimeout(() => saveMatchState(), 100);
+  };
+
+  const addRedCard = (team, player) => {
+    if (player.isRedCarded) return;
+
+    const update = (players) => players.map(p => {
+      if (p.id === player.id) {
+        setMatchLog(prev => [{
+          id: generateUniqueId(),
+          time: formatTime(time),
+          player: p.name,
+          team: team === 'A' ? teamAName : teamBName,
+          type: 'RED CARD'
+        }, ...prev].slice(0, 10));
+
+        return { ...p, isRedCarded: true };
+      }
+      return p;
+    });
+
+    if (team === 'A') setPlayersA(update);
+    else setPlayersB(update);
+
+    // Add 2-minute suspension
+    setActiveFouls(prev => [...prev, {
+      id: Date.now(),
+      playerId: player.id,
+      team,
+      playerName: player.name,
+      playerNumber: player.number,
+      remaining: 120,
+    }]);
+    
+    setTimeout(() => saveMatchState(), 100);
+  };
+
+  const addBlueCard = (team, player) => {
+    if (player.isRedCarded) return;
+
+    const update = (players) => players.map(p => {
+      if (p.id === player.id) {
+        setMatchLog(prev => [{
+          id: generateUniqueId(),
+          time: formatTime(time),
+          player: p.name,
+          team: team === 'A' ? teamAName : teamBName,
+          type: 'BLUE CARD'
+        }, ...prev].slice(0, 10));
+
+        return { ...p, isRedCarded: true, isBlueCarded: true };
+      }
+      return p;
+    });
+
+    if (team === 'A') setPlayersA(update);
+    else setPlayersB(update);
+
+    // Add 2-minute suspension
+    setActiveFouls(prev => [...prev, {
+      id: Date.now(),
+      playerId: player.id,
+      team,
+      playerName: player.name,
+      playerNumber: player.number,
+      remaining: 120,
+    }]);
+    
     setTimeout(() => saveMatchState(), 100);
   };
 
@@ -262,6 +483,7 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
   };
 
   const PlayerRow = ({ player, team, isOnCourt }) => {
+    if (!player) return null; // Safety check
     const suspended = isPlayerSuspended(player.id);
     const canScore = isRunning && !suspended && !player.isRedCarded && isOnCourt;
 
@@ -277,12 +499,22 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
             <div className={`text-sm font-semibold ${player.isRedCarded ? 'line-through' : ''}`}>
               {player.name}
             </div>
-            <div className="flex gap-1 mt-0.5">
+            <div className="flex gap-1 mt-0.5 items-center">
+              {/* Yellow Cards - show actual count */}
+              {player.yellowCards > 0 && (
+                <div className="flex items-center gap-0.5">
+                  {[...Array(player.yellowCards)].map((_, i) => (
+                    <div key={i} className="w-2 h-3 bg-yellow-500 rounded-sm" />
+                  ))}
+                </div>
+              )}
+              {/* 2-Min Suspensions */}
               {[...Array(3)].map((_, i) => (
                 <div key={i} className={`w-2 h-1 rounded-full ${
                   i < player.suspensions ? 'bg-yellow-500' : 'bg-slate-800'
                 }`} />
               ))}
+              {/* Red Card */}
               {player.isRedCarded && <Ban size={10} className="text-red-500 ml-1" />}
             </div>
           </div>
@@ -290,13 +522,36 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
 
         <div className="flex items-center gap-2">
           {isOnCourt && !player.isRedCarded && (
-            <button 
-              onClick={() => addTwoMinFoul(team, player)}
-              className="px-1.5 py-0.5 text-[9px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded hover:bg-yellow-500 hover:text-black"
-              title="Add 2 Min Foul"
-            >
-              2'
-            </button>
+            <>
+              <button 
+                onClick={() => addYellowCard(team, player)}
+                className="w-6 h-6 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 rounded hover:bg-yellow-500/30"
+                title="Yellow Card (Warning)"
+              >
+                <div className="w-2 h-3 bg-yellow-500 rounded-sm"/>
+              </button>
+              <button 
+                onClick={() => addTwoMinFoul(team, player)}
+                className="px-1.5 py-0.5 text-[9px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded hover:bg-yellow-500 hover:text-black"
+                title="2-Minute Suspension"
+              >
+                2'
+              </button>
+              <button 
+                onClick={() => addRedCard(team, player)}
+                className="w-6 h-6 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded hover:bg-red-600/30"
+                title="Red Card + 2 Min"
+              >
+                <div className="w-2 h-3 bg-red-600 rounded-sm"/>
+              </button>
+              <button 
+                onClick={() => addBlueCard(team, player)}
+                className="w-6 h-6 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded hover:bg-blue-600/30"
+                title="Blue Card + Disqualification"
+              >
+                <div className="w-2 h-3 bg-blue-600 rounded-sm"/>
+              </button>
+            </>
           )}
           {isOnCourt && (
             <button 
@@ -344,7 +599,90 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 font-sans">
-      <div className="max-w-6xl mx-auto space-y-6">
+      {/* SETUP SCREEN */}
+      {isSetup && (
+        <div className="max-w-2xl mx-auto mt-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-2xl"
+          >
+            <h1 className="text-3xl font-bold mb-8 text-center">Match Setup</h1>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                  Match Duration (Minutes)
+                </label>
+                <select
+                  value={matchDuration}
+                  onChange={(e) => setMatchDuration(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={40}>40 Minutes (20 min halves)</option>
+                  <option value={50}>50 Minutes (25 min halves)</option>
+                  <option value={60}>60 Minutes (30 min halves)</option>
+                  <option value={70}>70 Minutes (35 min halves)</option>
+                  <option value={80}>80 Minutes (40 min halves)</option>
+                </select>
+                <p className="text-xs text-slate-500 mt-2">
+                  Halftime will automatically trigger at {matchDuration/2} minutes
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                    Home Team
+                  </label>
+                  <input
+                    value={teamAName}
+                    onChange={(e) => setTeamAName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-blue-400 font-bold outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                    Away Team
+                  </label>
+                  <input
+                    value={teamBName}
+                    onChange={(e) => setTeamBName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-red-400 font-bold outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                <p className="text-sm text-blue-300">
+                  <strong>Rules:</strong> Max 3 timeouts per match, 2 per half (combined), 1 minute each. 
+                  Clock auto-stops at halftime and full-time.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsSetup(false);
+                  setMatchLog(prev => [{
+                    id: generateUniqueId(),
+                    time: '00:00',
+                    player: 'OFFICIAL',
+                    team: 'MATCH',
+                    type: 'KICKOFF'
+                  }, ...prev]);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all"
+              >
+                Start Match
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MAIN MATCH INTERFACE */}
+      {!isSetup && (
+        <div className="max-w-6xl mx-auto space-y-6">
         {/* Connection Status */}
         <div className="flex items-center justify-between bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800">
           <div className="flex items-center gap-2">
@@ -386,7 +724,31 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
 
         {/* HEADER SCOREBOARD */}
         <div className="grid grid-cols-3 gap-4 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
-          {!isRunning && time > 0 && (
+          {/* TIMEOUT OVERLAY */}
+          {timeoutCountdown !== null && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 bg-blue-600/95 backdrop-blur-md z-50 flex flex-col items-center justify-center"
+            >
+              <div className="text-sm font-bold uppercase tracking-widest mb-2">
+                {activeTimeoutTeam} Time-Out
+              </div>
+              <div className="text-9xl font-mono font-black">{timeoutCountdown}</div>
+              <button
+                onClick={() => {
+                  setTimeoutCountdown(null);
+                  setActiveTimeoutTeam(null);
+                  setIsRunning(true);
+                }}
+                className="mt-8 px-6 py-2 bg-white/10 rounded-full text-xs hover:bg-white/20 transition-colors"
+              >
+                Resume Match
+              </button>
+            </motion.div>
+          )}
+
+          {!isRunning && time > 0 && timeoutCountdown === null && (
             <div className="absolute top-0 left-0 w-full bg-yellow-500/10 text-yellow-500 text-[10px] text-center font-bold uppercase tracking-widest py-1">
               Match Paused - Scoring Disabled
             </div>
@@ -399,32 +761,66 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
               onChange={e => setTeamAName(e.target.value)} 
             />
             <div className="text-7xl font-black tabular-nums">{scoreA}</div>
+            <div className="flex justify-center gap-2 mt-2">
+              {[...Array(2)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-8 h-3 rounded-full border border-blue-500/30 ${
+                    i < timeoutsUsedA.length ? 'bg-slate-800 shadow-inner' : 'bg-blue-500 shadow-lg shadow-blue-500/20'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="flex flex-col items-center justify-center border-x border-slate-800 pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold text-slate-500 tracking-widest uppercase">
+                Half {currentHalf}
+              </span>
+              {isHalftimeReached && (
+                <span className="bg-yellow-500 text-slate-950 text-[10px] px-2 py-0.5 rounded font-black">
+                  HALFTIME
+                </span>
+              )}
+              {isMatchOver && (
+                <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-black">
+                  FULL TIME
+                </span>
+              )}
+            </div>
+
             <div className={`text-5xl font-mono font-bold tabular-nums mb-4 transition-colors ${
-              isRunning ? 'text-white' : 'text-slate-500'
+              isRunning && timeoutCountdown === null ? 'text-white' :
+              (isMatchOver || isHalftimeReached) ? 'text-red-500' :
+              'text-yellow-500'
             }`}>
               {formatTime(time)}
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={() => setIsRunning(!isRunning)} 
+                disabled={isMatchOver}
+                onClick={handleToggleTimer}
                 className={`p-3 rounded-full ${
-                  isRunning ? 'bg-red-500' : 'bg-emerald-500'
+                  isMatchOver ? 'bg-slate-800 cursor-not-allowed' :
+                  isRunning && timeoutCountdown === null ? 'bg-red-500' : 'bg-emerald-500'
                 } text-slate-950 shadow-lg`}
               >
-                {isRunning ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+                {isRunning && timeoutCountdown === null ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
               </button>
               <button 
                 onClick={() => {
                   if(confirm("Reset match?")) {
                     setTime(0);
                     setIsRunning(false);
-                    setPlayersA(generateRoster("A", 100));
-                    setPlayersB(generateRoster("B", 200));
                     setActiveFouls([]);
                     setMatchLog([]);
+                    const newPlayersA = generateRoster("A", 100);
+                    const newPlayersB = generateRoster("B", 200);
+                    setPlayersA(newPlayersA);
+                    setPlayersB(newPlayersB);
+                    setOnCourtA(newPlayersA.slice(0, 7).map(p => p.id));
+                    setOnCourtB(newPlayersB.slice(0, 7).map(p => p.id));
                   }
                 }} 
                 className="p-3 rounded-full bg-slate-800 hover:bg-slate-700"
@@ -441,6 +837,16 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
               onChange={e => setTeamBName(e.target.value)} 
             />
             <div className="text-7xl font-black tabular-nums">{scoreB}</div>
+            <div className="flex justify-center gap-2 mt-2">
+              {[...Array(2)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-8 h-3 rounded-full border border-red-500/30 ${
+                    i < timeoutsUsedB.length ? 'bg-slate-800 shadow-inner' : 'bg-red-500 shadow-lg shadow-red-500/20'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
@@ -516,7 +922,12 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
                   <span className={`font-bold ${
                     log.type === 'GOAL' ? 'text-emerald-500' : 
                     log.type === 'SUB' ? 'text-blue-400' : 
+                    log.type === 'YELLOW CARD' ? 'text-yellow-500' :
                     log.type === '2 MIN FOUL' ? 'text-yellow-500' : 
+                    log.type === 'BLUE CARD' ? 'text-blue-500' :
+                    log.type === 'TIMEOUT' ? 'text-blue-400' :
+                    log.type === 'TECHNICAL TIMEOUT' ? 'text-slate-400' :
+                    log.type === 'HALFTIME' || log.type === 'FULL TIME' || log.type === 'KICKOFF' ? 'text-white' :
                     'text-red-500'
                   }`}>
                     {log.type}
@@ -527,7 +938,88 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
             </div>
           </div>
         </div>
-      </div>
+
+        {/* PAUSE / TIMEOUT MODAL */}
+        <AnimatePresence>
+        {showPauseModal && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-slate-900 border border-slate-700 rounded-3xl p-8 w-full max-w-lg shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold">Match Stoppage</h2>
+                <button
+                  onClick={() => setShowPauseModal(false)}
+                  className="text-slate-500 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    disabled={
+                      timeoutsUsedA.length >= 2 ||
+                      getTotalHalfTimeouts() >= 2 ||
+                      getTotalMatchTimeouts() >= 3
+                    }
+                    onClick={() => confirmTimeout('A')}
+                    className="flex flex-col gap-2 p-6 rounded-2xl border border-slate-800 hover:border-blue-500 disabled:opacity-20 transition-all text-left bg-slate-950/50"
+                  >
+                    <span className="text-blue-400 font-bold text-sm uppercase">
+                      T.O. {teamAName}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Left: {2 - timeoutsUsedA.length} Team / {2 - getTotalHalfTimeouts()} Half
+                    </span>
+                  </button>
+
+                  <button
+                    disabled={
+                      timeoutsUsedB.length >= 2 ||
+                      getTotalHalfTimeouts() >= 2 ||
+                      getTotalMatchTimeouts() >= 3
+                    }
+                    onClick={() => confirmTimeout('B')}
+                    className="flex flex-col gap-2 p-6 rounded-2xl border border-slate-800 hover:border-red-500 disabled:opacity-20 transition-all text-left bg-slate-950/50"
+                  >
+                    <span className="text-red-400 font-bold text-sm uppercase">
+                      T.O. {teamBName}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Left: {2 - timeoutsUsedB.length} Team / {2 - getTotalHalfTimeouts()} Half
+                    </span>
+                  </button>
+                </div>
+
+                {getTotalHalfTimeouts() >= 2 && (
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-500 text-[10px] flex items-center gap-2">
+                    <Timer size={14} />
+                    Maximum combined timeouts (2) for Half {currentHalf} reached.
+                  </div>
+                )}
+
+                {getTotalMatchTimeouts() >= 3 && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] flex items-center gap-2">
+                    <Timer size={14} />
+                    Maximum match timeouts (3) reached.
+                  </div>
+                )}
+
+                <button
+                  onClick={technicalTimeout}
+                  className="w-full p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold transition-all"
+                >
+                  Technical Time-Out
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* SUBSTITUTION MODAL */}
       <AnimatePresence>
@@ -577,6 +1069,8 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           </div>
         )}
       </AnimatePresence>
+      </div>
+      )}
     </div>
   );
 };

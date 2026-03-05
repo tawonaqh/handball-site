@@ -10,23 +10,23 @@ import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 export default function RankingsPage() {
   const [standings, setStandings] = useState([]);
-  const [leagues, setLeagues] = useState([]);
-  const [selectedLeague, setSelectedLeague] = useState(null);
+  const [tournaments, setTournaments] = useState([]);
+  const [selectedTournament, setSelectedTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const leaguesData = await fetcher("leagues");
-        setLeagues(leaguesData || []);
+        const tournamentsData = await fetcher("leagues"); // Backend still uses leagues endpoint
+        setTournaments(tournamentsData || []);
         
-        // Select first league by default
-        if (leaguesData && leaguesData.length > 0) {
-          setSelectedLeague(leaguesData[0].id);
+        // Select first tournament by default
+        if (tournamentsData && tournamentsData.length > 0) {
+          setSelectedTournament(tournamentsData[0].id);
         }
       } catch (error) {
-        console.error("Error fetching leagues:", error);
+        console.error("Error fetching tournaments:", error);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -38,10 +38,10 @@ export default function RankingsPage() {
 
   useEffect(() => {
     async function fetchStandings() {
-      if (!selectedLeague) return;
+      if (!selectedTournament) return;
       
       try {
-        const standingsData = await fetcher(`leagues/${selectedLeague}/standings`);
+        const standingsData = await fetcher(`leagues/${selectedTournament}/standings`);
         setStandings(standingsData || []);
       } catch (error) {
         console.error("Error fetching standings:", error);
@@ -49,7 +49,7 @@ export default function RankingsPage() {
     }
     
     fetchStandings();
-  }, [selectedLeague]);
+  }, [selectedTournament]);
 
   if (loading) return <LoadingSpinner message="Loading rankings..." />;
   if (error) return <ErrorBoundary error={error} retry={() => window.location.reload()} />;
@@ -82,19 +82,19 @@ export default function RankingsPage() {
             </h1>
             
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See how teams rank across all leagues and competitions
+              See how teams rank across all tournaments and competitions
             </p>
 
-            {/* League Selector */}
-            {leagues.length > 0 && (
+            {/* Tournament Selector */}
+            {tournaments.length > 0 && (
               <div className="mt-8 flex justify-center">
                 <select
-                  value={selectedLeague || ''}
-                  onChange={(e) => setSelectedLeague(parseInt(e.target.value))}
+                  value={selectedTournament || ''}
+                  onChange={(e) => setSelectedTournament(parseInt(e.target.value))}
                   className="px-6 py-3 bg-white border-2 border-orange-500 rounded-xl text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
-                  {leagues.map(league => (
-                    <option key={league.id} value={league.id}>{league.name}</option>
+                  {tournaments.map(tournament => (
+                    <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
                   ))}
                 </select>
               </div>
@@ -106,7 +106,7 @@ export default function RankingsPage() {
             <div className="bg-gradient-to-r from-orange-500 to-yellow-400 p-6">
               <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
                 <FaTrophy />
-                <span>League Standings</span>
+                <span>Tournament Standings</span>
               </h2>
             </div>
             
@@ -181,7 +181,7 @@ export default function RankingsPage() {
             </div>
           </div>
 
-          {standings.length === 0 && selectedLeague && (
+          {standings.length === 0 && selectedTournament && (
             <div className="text-center py-20">
               <IoStatsChart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600 mb-2">No rankings available</h3>

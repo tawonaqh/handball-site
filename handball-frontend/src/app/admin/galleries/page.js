@@ -13,7 +13,9 @@ import {
   Calendar,
   Tag,
   Download,
-  Upload
+  Upload,
+  Trophy,
+  Users
 } from 'lucide-react';
 import { fetcher } from '@/lib/api';
 import Link from 'next/link';
@@ -37,12 +39,27 @@ const GalleryCard = ({ gallery, index }) => {
     >
       {/* Image Preview */}
       <div className="relative h-48 bg-gray-700/50 overflow-hidden">
-        {gallery.featured_image ? (
-          <img
-            src={gallery.featured_image}
-            alt={gallery.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+        {gallery.media_url ? (
+          gallery.media_type === 'video' ? (
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+              <video
+                src={gallery.media_url}
+                className="w-full h-full object-cover"
+                muted
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <div className="w-0 h-0 border-l-8 border-l-white border-y-6 border-y-transparent ml-1" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={gallery.media_url}
+              alt={gallery.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          )
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Image className="w-16 h-16 text-gray-500" />
@@ -54,20 +71,20 @@ const GalleryCard = ({ gallery, index }) => {
             {gallery.status || 'draft'}
           </div>
         </div>
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-lg font-semibold text-white line-clamp-1">
+            {gallery.title}
+          </h3>
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors line-clamp-2">
-              {gallery.title}
-            </h3>
-            <p className="text-sm text-gray-400 mt-1">
-              {gallery.category || 'Gallery'}
-            </p>
-          </div>
-          <div className="flex items-center space-x-2 ml-4">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-400">
+            {gallery.media_type === 'video' ? 'Video' : 'Image'}
+          </p>
+          <div className="flex items-center space-x-2">
             <Link href={`/admin/galleries/${gallery.id}`}>
               <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
                 <Eye className="w-4 h-4" />
@@ -85,10 +102,6 @@ const GalleryCard = ({ gallery, index }) => {
         </div>
 
         <div className="space-y-3">
-          <p className="text-sm text-gray-300 line-clamp-2">
-            {gallery.description || 'No description available'}
-          </p>
-          
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <Calendar className="w-4 h-4" />
             <span>
@@ -101,23 +114,24 @@ const GalleryCard = ({ gallery, index }) => {
             </span>
           </div>
 
-          {gallery.tags && (
+          {gallery.tournament && (
             <div className="flex items-center space-x-2 text-sm text-gray-400">
-              <Tag className="w-4 h-4" />
-              <div className="flex flex-wrap gap-1">
-                {gallery.tags.split(',').slice(0, 2).map((tag, i) => (
-                  <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs">
-                    {tag.trim()}
-                  </span>
-                ))}
-              </div>
+              <Trophy className="w-4 h-4" />
+              <span>{gallery.tournament.name}</span>
+            </div>
+          )}
+
+          {gallery.team && (
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Users className="w-4 h-4" />
+              <span>{gallery.team.name}</span>
             </div>
           )}
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
             <div className="flex items-center space-x-2 text-sm text-gray-400">
               <Upload className="w-4 h-4" />
-              <span>{gallery.images_count || 0} images</span>
+              <span>{gallery.media_type}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-400">
               <Download className="w-4 h-4" />

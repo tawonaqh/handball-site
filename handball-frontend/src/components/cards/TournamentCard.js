@@ -1,31 +1,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { IoCalendar, IoTrophy, IoLocation } from "react-icons/io5";
+import { IoCalendar, IoTrophy } from "react-icons/io5";
 import { FaArrowRight } from "react-icons/fa";
 
 export default function TournamentCard({ tournament }) {
-  const getCountdown = (date) => {
-    const now = new Date();
-    const target = new Date(date);
-    const diff = target - now;
-    if (diff <= 0) return "Live Now!";
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return `${days}d ${hours}h`;
-  };
-
-  const getTournamentStatus = (startDate, endDate) => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (now < start) return { status: "upcoming", color: "bg-blue-500" };
-    if (now > end) return { status: "completed", color: "bg-gray-500" };
-    return { status: "live", color: "bg-green-500" };
-  };
-
-  const { status, color } = getTournamentStatus(tournament.start_date, tournament.end_date);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -37,13 +15,6 @@ export default function TournamentCard({ tournament }) {
     >
       {/* Header with gradient */}
       <div className="relative h-48 bg-gradient-to-br from-orange-500 via-orange-400 to-yellow-400 overflow-hidden">
-        {/* Status badge */}
-        <div className="absolute top-4 right-4 z-10">
-          <span className={`${color} text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg`}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        </div>
-
         {/* Animated background pattern */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-4 left-4 w-16 h-16 border-2 border-white rounded-full animate-pulse" />
@@ -53,15 +24,22 @@ export default function TournamentCard({ tournament }) {
 
         {/* Tournament info overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
-          <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-yellow-200 transition-colors">
-            {tournament.name}
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-2xl font-bold text-white group-hover:text-yellow-200 transition-colors">
+              {tournament.name}
+            </h3>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+              tournament.type === 'knockout'
+                ? 'bg-purple-500 text-white'
+                : 'bg-blue-500 text-white'
+            }`}>
+              {tournament.type === 'knockout' ? 'Knockout' : 'League'}
+            </span>
+          </div>
           <div className="flex items-center space-x-4 text-white/90 text-sm">
             <div className="flex items-center space-x-1">
               <IoCalendar className="w-4 h-4" />
-              <span>
-                {new Date(tournament.start_date).toLocaleDateString()} - {new Date(tournament.end_date).toLocaleDateString()}
-              </span>
+              <span>{tournament.season || "Current Season"}</span>
             </div>
           </div>
         </div>
@@ -73,19 +51,32 @@ export default function TournamentCard({ tournament }) {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600 mb-1">
-              {tournament.teams_count || 0}
+              {tournament.teams?.length || 0}
+              {tournament.max_teams && (
+                <span className="text-base text-gray-400">/{tournament.max_teams}</span>
+              )}
             </div>
             <div className="text-sm text-gray-500">Teams</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600 mb-1">
-              {getCountdown(tournament.start_date)}
+              {tournament.matches_count || tournament.games?.length || 0}
             </div>
-            <div className="text-sm text-gray-500">
-              {status === 'live' ? 'Live Now' : status === 'completed' ? 'Finished' : 'Starts In'}
-            </div>
+            <div className="text-sm text-gray-500">Matches</div>
           </div>
         </div>
+
+        {/* Knockout info */}
+        {tournament.type === 'knockout' && tournament.num_groups && (
+          <div className="bg-purple-50 rounded-lg p-3 mb-4 border border-purple-200">
+            <div className="flex items-center justify-between text-xs text-purple-700">
+              <span className="font-semibold">{tournament.num_groups} Groups</span>
+              {tournament.teams_per_group && (
+                <span>{tournament.teams_per_group} teams each</span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Description */}
         {tournament.description && (

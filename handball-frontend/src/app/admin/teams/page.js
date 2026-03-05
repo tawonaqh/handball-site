@@ -24,13 +24,26 @@ const TeamCard = ({ team, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600/50 transition-all duration-300 group"
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300 group"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
+      {/* Team Logo/Header */}
+      <div className="relative h-32 bg-gradient-to-br from-green-500/20 to-green-600/20 overflow-hidden">
+        {team.logo_url ? (
+          <img
+            src={team.logo_url}
+            alt={team.name}
+            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Users className="w-16 h-16 text-green-500/50" />
           </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
               {team.name}
@@ -39,53 +52,53 @@ const TeamCard = ({ team, index }) => {
               {team.category || 'Team'}
             </p>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link href={`/admin/teams/${team.id}`}>
-            <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
-              <Eye className="w-4 h-4" />
+          <div className="flex items-center space-x-2">
+            <Link href={`/admin/teams/${team.id}`}>
+              <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                <Eye className="w-4 h-4" />
+              </button>
+            </Link>
+            <Link href={`/admin/teams/${team.id}/edit`}>
+              <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                <Edit className="w-4 h-4" />
+              </button>
+            </Link>
+            <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+              <Trash2 className="w-4 h-4" />
             </button>
-          </Link>
-          <Link href={`/admin/teams/${team.id}/edit`}>
-            <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
-              <Edit className="w-4 h-4" />
-            </button>
-          </Link>
-          <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <MapPin className="w-4 h-4" />
-          <span>{team.location || 'Location not set'}</span>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <User className="w-4 h-4" />
-          <span>Coach: {team.coach || 'Not assigned'}</span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Trophy className="w-4 h-4" />
-          <span>League: {team.league?.name || 'Not assigned'}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Users className="w-4 h-4" />
-            <span>{team.players_count || 0} Players</span>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-            team.status === 'active' 
-              ? 'bg-green-500/20 text-green-400' 
-              : team.status === 'inactive'
-              ? 'bg-red-500/20 text-red-400'
-              : 'bg-yellow-500/20 text-yellow-400'
-          }`}>
-            {team.status || 'pending'}
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <MapPin className="w-4 h-4" />
+            <span>{team.location || 'Location not set'}</span>
+          </div>
+          
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <User className="w-4 h-4" />
+            <span>Coach: {team.coach || 'Not assigned'}</span>
+          </div>
+
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Trophy className="w-4 h-4" />
+            <span>League: {team.league?.name || 'Not assigned'}</span>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center space-x-2 text-sm">
+              <span className="text-gray-400">Ranking:</span>
+              <span className="text-green-400 font-semibold">{team.ranking?.points || 0} pts</span>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+              team.status === 'active' 
+                ? 'bg-green-500/20 text-green-400' 
+                : team.status === 'inactive'
+                ? 'bg-red-500/20 text-red-400'
+                : 'bg-yellow-500/20 text-yellow-400'
+            }`}>
+              {team.status || 'active'}
+            </div>
           </div>
         </div>
       </div>
