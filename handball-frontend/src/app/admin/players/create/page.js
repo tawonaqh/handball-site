@@ -14,6 +14,7 @@ export default function CreatePlayerPage() {
   const [teams, setTeams] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
+    gender: "men",
     team_id: "",
     position: "",
     jersey_number: "",
@@ -130,21 +131,39 @@ export default function CreatePlayerPage() {
           folder="players"
         />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Team
-          </label>
-          <select
-            name="team_id"
-            value={formData.team_id}
-            onChange={handleChange}
-            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-          >
-            <option value="">Select team</option>
-            {teams.map(team => (
-              <option key={team.id} value={team.id}>{team.name}</option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Gender *
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            >
+              <option value="men">Men</option>
+              <option value="women">Women</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Team
+            </label>
+            <select
+              name="team_id"
+              value={formData.team_id}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            >
+              <option value="">Select team</option>
+              {teams.map(team => (
+                <option key={team.id} value={team.id}>{team.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

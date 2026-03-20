@@ -77,16 +77,9 @@ export default function AdminSidebar({ collapsed, setCollapsed, mobileOpen, setM
     router.push('/admin/login');
   };
 
-  const sidebarVariants = {
-    expanded: { width: 280 },
-    collapsed: { width: 80 }
-  };
-
   const SidebarContent = () => (
-    <motion.div
-      variants={sidebarVariants}
-      animate={collapsed ? "collapsed" : "expanded"}
-      className="h-full bg-gray-900 border-r border-gray-700/50 flex flex-col relative overflow-hidden"
+    <div
+      className={`h-full bg-gray-900 border-r border-gray-700/50 flex flex-col relative overflow-hidden transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`}
     >
       {/* Background decorations */}
       <div className="absolute inset-0 bg-gradient-to-b from-gray-800/20 to-transparent" />
@@ -253,13 +246,13 @@ export default function AdminSidebar({ collapsed, setCollapsed, mobileOpen, setM
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block flex-shrink-0">
         <SidebarContent />
       </div>
 
@@ -267,11 +260,11 @@ export default function AdminSidebar({ collapsed, setCollapsed, mobileOpen, setM
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ x: -280 }}
+            initial={{ x: -256 }}
             animate={{ x: 0 }}
-            exit={{ x: -280 }}
+            exit={{ x: -256 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed left-0 top-0 z-50 w-80 h-full lg:hidden"
+            className="fixed left-0 top-0 z-50 w-64 h-full lg:hidden"
           >
             <SidebarContent />
           </motion.div>

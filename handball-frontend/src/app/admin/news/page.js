@@ -184,23 +184,23 @@ export default function NewsPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
-            <Newspaper className="w-8 h-8 text-yellow-500" />
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center space-x-3">
+            <Newspaper className="w-7 h-7 sm:w-8 sm:h-8 text-yellow-500 flex-shrink-0" />
             <span>News</span>
           </h1>
-          <p className="text-gray-400 mt-2">Manage news articles and announcements</p>
+          <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Manage news articles and announcements</p>
         </div>
         
-        <Link href="/admin/news/create">
+        <Link href="/admin/news/create" className="flex-shrink-0">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            className="flex items-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Write Article</span>
           </motion.button>
         </Link>
@@ -213,9 +213,9 @@ export default function NewsPage() {
         transition={{ delay: 0.1 }}
         className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
       >
-        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+        <div className="flex flex-col gap-3">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -226,42 +226,44 @@ export default function NewsPage() {
             />
           </div>
 
-          {/* Status Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300 appearance-none"
-            >
-              <option value="all">All Status</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Status Filter */}
+            <div className="relative flex-1">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300 appearance-none"
+              >
+                <option value="all">All Status</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
 
-          {/* Category Filter */}
-          <div className="relative">
-            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300 appearance-none"
-            >
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+            {/* Category Filter */}
+            <div className="relative flex-1">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-300 appearance-none"
+              >
+                <option value="all">All Categories</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Articles Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredArticles.length > 0 ? (
           filteredArticles.map((article, index) => (
             <NewsCard key={article.id} article={article} index={index} />

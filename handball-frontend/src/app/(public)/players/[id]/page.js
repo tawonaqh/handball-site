@@ -50,41 +50,33 @@ export default function PlayerDetailPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen pt-24 pb-20">
-        <div className="container mx-auto px-6">
-          
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12"
-          >
-            <div className="bg-gradient-to-r from-orange-500 to-yellow-400 rounded-3xl p-12 text-white relative overflow-hidden">
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 sm:mb-12">
+            <div className="bg-gradient-to-r from-orange-500 to-yellow-400 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden">
               <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-4 left-4 w-32 h-32 border-2 border-white rounded-full animate-pulse" />
-                <div className="absolute bottom-4 right-8 w-24 h-24 border border-white rounded-lg rotate-45" />
+                <div className="absolute top-4 left-4 w-24 sm:w-32 h-24 sm:h-32 border-2 border-white rounded-full animate-pulse" />
+                <div className="absolute bottom-4 right-8 w-16 sm:w-24 h-16 sm:h-24 border border-white rounded-lg rotate-45" />
               </div>
-              
               <div className="relative z-10">
-                <div className="flex items-center space-x-2 mb-4">
-                  <FaUser className="w-6 h-6" />
-                  <span className="text-sm font-semibold uppercase tracking-wider">Player Profile</span>
+                <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+                  <FaUser className="w-5 h-5" />
+                  <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider">Player Profile</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black mb-4">{player.name}</h1>
-                <div className="flex flex-wrap gap-4 text-lg">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 sm:mb-4">{player.name}</h1>
+                <div className="flex flex-wrap gap-2 sm:gap-4 text-sm sm:text-lg">
                   {player.position && (
-                    <span className="bg-white/20 px-4 py-2 rounded-full">{player.position}</span>
+                    <span className="bg-white/20 px-3 py-1 sm:px-4 sm:py-2 rounded-full">{player.position}</span>
                   )}
                   {player.jersey_number && (
-                    <span className="bg-white/20 px-4 py-2 rounded-full">#{player.jersey_number}</span>
+                    <span className="bg-white/20 px-3 py-1 sm:px-4 sm:py-2 rounded-full">#{player.jersey_number}</span>
                   )}
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Stats Grid */}
-          <div className="grid md:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -147,14 +139,11 @@ export default function PlayerDetailPage() {
           </div>
 
           {/* Player Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-2xl shadow-lg p-8 mb-12 border border-gray-100"
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+            className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8 sm:mb-12 border border-gray-100"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Player Information</h2>
-            <div className="grid md:grid-cols-2 gap-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Player Information</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {player.team && (
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Team</p>
@@ -186,17 +175,14 @@ export default function PlayerDetailPage() {
 
           {/* Statistics */}
           {player.stats && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100"
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+              className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100"
             >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
                 <IoStatsChart className="text-orange-500" />
                 Season Statistics
               </h2>
-              <div className="grid md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                 <div className="text-center p-4 bg-orange-50 rounded-xl">
                   <p className="text-3xl font-bold text-orange-600">{player.stats.goals || 0}</p>
                   <p className="text-sm text-gray-600 mt-1">Goals</p>

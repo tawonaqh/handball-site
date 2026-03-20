@@ -63,35 +63,30 @@ export default function RankingsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen pt-24 pb-20">
-        <div className="container mx-auto px-6">
-          
-          {/* Header */}
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full mb-6">
+            <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full mb-4 sm:mb-6">
               <IoStatsChart />
               <span className="font-semibold">Rankings</span>
             </div>
-            
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
               Team Rankings
             </h1>
-            
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
               See how teams rank across all tournaments and competitions
             </p>
 
-            {/* Tournament Selector */}
             {tournaments.length > 0 && (
-              <div className="mt-8 flex justify-center">
+              <div className="mt-6 sm:mt-8 flex justify-center px-4">
                 <select
                   value={selectedTournament || ''}
                   onChange={(e) => setSelectedTournament(parseInt(e.target.value))}
-                  className="px-6 py-3 bg-white border-2 border-orange-500 rounded-xl text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full max-w-xs sm:w-auto px-4 sm:px-6 py-3 bg-white border-2 border-orange-500 rounded-xl text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   {tournaments.map(tournament => (
                     <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
@@ -101,26 +96,25 @@ export default function RankingsPage() {
             )}
           </motion.div>
 
-          {/* Rankings Table */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-orange-500 to-yellow-400 p-6">
-              <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
+            <div className="bg-gradient-to-r from-orange-500 to-yellow-400 p-4 sm:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center space-x-2">
                 <FaTrophy />
                 <span>Tournament Standings</span>
               </h2>
             </div>
             
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px]">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Position</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Team</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Points</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Played</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Won</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Lost</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Goal Diff</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">Pos</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">Team</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-900">Pts</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-900">P</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-900">W</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-900">L</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-900">GD</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -132,44 +126,26 @@ export default function RankingsPage() {
                       transition={{ delay: index * 0.05 }}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getBadgeColor(standing.rank)}`}>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${getBadgeColor(standing.rank)}`}>
                             {standing.rank}
                           </div>
-                          {standing.rank <= 3 && (
-                            <FaTrophy className={`w-4 h-4 ${
-                              standing.rank === 1 ? 'text-yellow-500' :
-                              standing.rank === 2 ? 'text-gray-400' :
-                              'text-orange-500'
-                            }`} />
-                          )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-lg font-semibold text-gray-900">{standing.team.name}</div>
-                        </div>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <div className="text-sm sm:text-lg font-semibold text-gray-900">{standing.team.name}</div>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="text-2xl font-bold text-orange-600">
-                          {standing.points}
-                        </div>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                        <div className="text-lg sm:text-2xl font-bold text-orange-600">{standing.points}</div>
                       </td>
-                      <td className="px-6 py-4 text-center text-gray-900">
-                        {standing.gamesPlayed}
-                      </td>
-                      <td className="px-6 py-4 text-center text-green-600 font-semibold">
-                        {standing.wins}
-                      </td>
-                      <td className="px-6 py-4 text-center text-red-600 font-semibold">
-                        {standing.losses}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className={`font-semibold ${
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm text-gray-900">{standing.gamesPlayed}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm text-green-600 font-semibold">{standing.wins}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm text-red-600 font-semibold">{standing.losses}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                        <div className={`text-sm font-semibold ${
                           standing.goalDifference > 0 ? 'text-green-600' :
-                          standing.goalDifference < 0 ? 'text-red-600' :
-                          'text-gray-600'
+                          standing.goalDifference < 0 ? 'text-red-600' : 'text-gray-600'
                         }`}>
                           {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
                         </div>

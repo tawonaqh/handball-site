@@ -10,7 +10,7 @@ export default function PlayerCard({ player }) {
       viewport={{ once: true }}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
-      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100"
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 w-full"
     >
       {/* Player Photo */}
       <div className="relative h-64 bg-gradient-to-br from-orange-500 to-yellow-500 overflow-hidden">
@@ -35,6 +35,17 @@ export default function PlayerCard({ player }) {
             </div>
           </div>
         )}
+
+        {/* Gender Badge */}
+        <div className="absolute top-4 left-4">
+          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+            player.gender === 'women'
+              ? 'bg-pink-500 text-white'
+              : 'bg-blue-500 text-white'
+          }`}>
+            {player.gender === 'women' ? 'Women' : 'Men'}
+          </span>
+        </div>
         
         {/* Player Name Overlay */}
         <div className="absolute bottom-4 left-4 right-4">

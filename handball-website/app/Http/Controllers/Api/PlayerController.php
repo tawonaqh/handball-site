@@ -20,12 +20,18 @@ class PlayerController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'gender' => 'nullable|in:men,women',
+        ]);
         $player = Player::create($request->all());
         return response()->json($player, 201);
     }
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'gender' => 'nullable|in:men,women',
+        ]);
         $player = Player::findOrFail($id);
         $player->update($request->all());
         return response()->json($player, 200);

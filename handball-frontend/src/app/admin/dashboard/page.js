@@ -239,20 +239,19 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative bg-gradient-to-r from-gray-800/50 to-gray-700/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 overflow-hidden"
+        className="relative bg-gradient-to-r from-gray-800/50 to-gray-700/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl sm:rounded-3xl p-5 sm:p-8 overflow-hidden"
       >
-        {/* Background decorations */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-blue-500/10" />
         <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full -translate-y-20 translate-x-20" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-500/20 to-transparent rounded-full translate-y-16 -translate-x-16" />
         
-        <div className="relative z-10 flex items-center justify-between">
-          <div>
+        <div className="relative z-10 flex items-center justify-between gap-4">
+          <div className="min-w-0">
             <motion.h1 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-4xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent mb-2"
+              className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent mb-1 sm:mb-2"
             >
               Welcome Back, Admin! 👋
             </motion.h1>
@@ -260,7 +259,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-gray-300 text-lg"
+              className="text-gray-300 text-sm sm:text-lg"
             >
               Manage your handball league with style and efficiency
             </motion.p>
@@ -268,14 +267,14 @@ export default function Dashboard() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="flex items-center space-x-4 mt-4"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-3 sm:mt-4"
             >
-              <div className="flex items-center space-x-2 text-sm text-gray-400">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Last updated: {new Date().toLocaleTimeString()}</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-green-400">
-                <Zap className="w-4 h-4" />
+              <div className="flex items-center space-x-2 text-xs sm:text-sm text-green-400">
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>System Online</span>
               </div>
             </motion.div>
@@ -284,10 +283,10 @@ export default function Dashboard() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="hidden md:block"
+            className="hidden sm:block flex-shrink-0"
           >
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center shadow-2xl">
-              <Shield className="w-12 h-12 text-white" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center shadow-2xl">
+              <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
             </div>
           </motion.div>
         </div>
@@ -298,12 +297,12 @@ export default function Dashboard() {
         <motion.h2 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-2xl font-bold text-white mb-6 flex items-center space-x-2"
+          className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center space-x-2"
         >
-          <BarChart3 className="w-6 h-6 text-orange-500" />
+          <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
           <span>Overview Statistics</span>
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {statCards.map((stat, index) => (
             <StatCard key={stat.title} {...stat} index={index} />
           ))}
@@ -315,12 +314,12 @@ export default function Dashboard() {
         <motion.h2 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-2xl font-bold text-white mb-6 flex items-center space-x-2"
+          className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center space-x-2"
         >
-          <Zap className="w-6 h-6 text-orange-500" />
+          <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
           <span>Quick Actions</span>
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {quickActions.map((action, index) => (
             <QuickActionCard key={action.title} {...action} index={index} />
           ))}

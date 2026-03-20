@@ -23,12 +23,18 @@ class LeagueController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'gender' => 'nullable|in:men,women',
+        ]);
         $league = League::create($request->all());
         return response()->json($league, 201);
     }
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'gender' => 'nullable|in:men,women',
+        ]);
         $league = League::findOrFail($id);
         $league->update($request->all());
         return response()->json($league, 200);

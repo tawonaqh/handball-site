@@ -9,7 +9,7 @@ export default function PublicLayout({ children }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-white overflow-x-hidden">
       {/* Header */}
       <Header />
 

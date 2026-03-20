@@ -17,6 +17,7 @@ export default function EditLeaguePage() {
   const [formData, setFormData] = useState({
     name: "",
     tournament_id: "",
+    gender: "men",
     type: "league",
     max_teams: "",
     num_groups: "",
@@ -35,6 +36,7 @@ export default function EditLeaguePage() {
         setFormData({
           name: leagueData.name || "",
           tournament_id: leagueData.tournament_id || "",
+          gender: leagueData.gender || "men",
           type: leagueData.type || "league",
           max_teams: leagueData.max_teams || "",
           num_groups: leagueData.num_groups || "",
@@ -145,25 +147,44 @@ export default function EditLeaguePage() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Tournament Type *
-          </label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          >
-            <option value="league">League (Standings)</option>
-            <option value="knockout">Knockout (Groups + Elimination)</option>
-          </select>
-          <p className="text-xs text-gray-400 mt-2">
-            {formData.type === 'league' 
-              ? 'Teams compete in a round-robin format with standings based on points'
-              : 'Teams compete in groups, then advance to knockout rounds'}
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Tournament Type *
+            </label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            >
+              <option value="league">League (Standings)</option>
+              <option value="knockout">Knockout (Groups + Elimination)</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-2">
+              {formData.type === 'league'
+                ? 'Teams compete in a round-robin format with standings based on points'
+                : 'Teams compete in groups, then advance to knockout rounds'}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Gender *
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            >
+              <option value="men">Men's</option>
+              <option value="women">Women's</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-2">Which gender category this tournament is for</p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

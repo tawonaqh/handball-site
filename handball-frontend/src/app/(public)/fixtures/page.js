@@ -53,124 +53,111 @@ export default function FixturesPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen pt-24 pb-20">
-        <div className="container mx-auto px-6">
-          
-          {/* Header */}
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full mb-6">
+            <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full mb-4 sm:mb-6">
               <FaCalendarAlt />
               <span className="font-semibold">Fixtures</span>
             </div>
-            
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
               Match Fixtures
             </h1>
-            
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
               Stay up to date with all upcoming and completed handball matches
             </p>
           </motion.div>
 
-          {/* Fixtures List */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {fixtures.map((fixture, index) => (
               <motion.div
                 key={fixture.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100"
               >
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <FaCalendarAlt className="text-orange-500" />
-                      <span className="text-gray-600">
+                      <FaCalendarAlt className="text-orange-500 w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-gray-600 text-xs sm:text-sm">
                         {new Date(fixture.match_date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
+                          year: 'numeric', month: 'short', day: 'numeric' 
                         })}
                       </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(fixture.status)}`}>
+                    <span className={`px-2 py-1 sm:px-3 rounded-full text-xs font-semibold ${getStatusColor(fixture.status)}`}>
                       {fixture.status?.charAt(0).toUpperCase() + fixture.status?.slice(1) || 'Scheduled'}
                     </span>
                   </div>
                   
-                  <div className="grid md:grid-cols-3 gap-6 items-center">
-                    {/* Home Team */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-6 items-center">
                     <div className="text-center">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-sm sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2 leading-tight">
                         {fixture.home_team?.name || 'Home Team'}
                       </h3>
                       {fixture.status === 'completed' && (
-                        <div className="text-3xl font-black text-orange-600">
+                        <div className="text-2xl sm:text-3xl font-black text-orange-600">
                           {fixture.home_score || 0}
                         </div>
                       )}
                     </div>
                     
-                    {/* Match Info */}
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-400 mb-2">VS</div>
-                      <div className="flex items-center justify-center space-x-2 text-gray-600">
-                        <FaClock className="w-4 h-4" />
-                        <span>
+                      <div className="text-lg sm:text-2xl font-bold text-gray-400 mb-1 sm:mb-2">VS</div>
+                      <div className="flex items-center justify-center space-x-1 text-gray-600">
+                        <FaClock className="w-3 h-3" />
+                        <span className="text-xs sm:text-sm">
                           {new Date(fixture.match_date).toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                            hour: '2-digit', minute: '2-digit' 
                           })}
                         </span>
                       </div>
                       {fixture.venue && (
-                        <div className="flex items-center justify-center space-x-2 text-gray-600 mt-1">
-                          <FaMapMarkerAlt className="w-4 h-4" />
-                          <span className="text-sm">{fixture.venue}</span>
+                        <div className="hidden sm:flex items-center justify-center space-x-1 text-gray-600 mt-1">
+                          <FaMapMarkerAlt className="w-3 h-3" />
+                          <span className="text-xs">{fixture.venue}</span>
                         </div>
                       )}
                     </div>
                     
-                    {/* Away Team */}
                     <div className="text-center">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-sm sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2 leading-tight">
                         {fixture.away_team?.name || 'Away Team'}
                       </h3>
                       {fixture.status === 'completed' && (
-                        <div className="text-3xl font-black text-orange-600">
+                        <div className="text-2xl sm:text-3xl font-black text-orange-600">
                           {fixture.away_score || 0}
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                      {fixture.league && (
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <IoStatsChart className="w-4 h-4" />
-                          <span className="text-sm">{fixture.league.name}</span>
-                        </div>
-                      )}
-                      
-                      {fixture.status === 'live' && (
-                        <Link href={`/fixtures/${fixture.id}/live`}>
-                          <button className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-300 animate-pulse">
-                            <span className="w-2 h-2 bg-white rounded-full"></span>
-                            <span>Watch Live</span>
-                          </button>
-                        </Link>
-                      )}
-                      
-                      {fixture.status === 'scheduled' && (
-                        <span className="text-sm text-gray-500">Upcoming</span>
-                      )}
-                    </div>
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 flex items-center justify-between">
+                    {fixture.league && (
+                      <div className="flex items-center space-x-1 text-gray-600">
+                        <IoStatsChart className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="text-xs sm:text-sm">{fixture.league.name}</span>
+                      </div>
+                    )}
+                    
+                    {fixture.status === 'live' && (
+                      <Link href={`/fixtures/${fixture.id}/live`}>
+                        <button className="flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 animate-pulse">
+                          <span className="w-2 h-2 bg-white rounded-full"></span>
+                          <span>Watch Live</span>
+                        </button>
+                      </Link>
+                    )}
+                    
+                    {fixture.status === 'scheduled' && (
+                      <span className="text-xs sm:text-sm text-gray-500">Upcoming</span>
+                    )}
                   </div>
                 </div>
               </motion.div>

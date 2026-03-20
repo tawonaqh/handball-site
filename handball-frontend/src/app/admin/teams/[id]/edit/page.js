@@ -17,6 +17,7 @@ export default function EditTeamPage() {
   const [leagues, setLeagues] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
+    gender: "men",
     league_id: "",
     logo_url: ""
   });
@@ -31,6 +32,7 @@ export default function EditTeamPage() {
         
         setFormData({
           name: teamData.name || "",
+          gender: teamData.gender || "men",
           league_id: teamData.league_id || "",
           logo_url: teamData.logo_url || ""
         });
@@ -145,21 +147,39 @@ export default function EditTeamPage() {
           folder="teams"
         />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            League
-          </label>
-          <select
-            name="league_id"
-            value={formData.league_id}
-            onChange={handleChange}
-            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
-          >
-            <option value="">Select league (optional)</option>
-            {leagues.map(league => (
-              <option key={league.id} value={league.id}>{league.name}</option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Gender *
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
+            >
+              <option value="men">Men's Team</option>
+              <option value="women">Women's Team</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              League
+            </label>
+            <select
+              name="league_id"
+              value={formData.league_id}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
+            >
+              <option value="">Select league (optional)</option>
+              {leagues.map(league => (
+                <option key={league.id} value={league.id}>{league.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="flex gap-4 pt-4">

@@ -22,12 +22,18 @@ class TeamController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'gender' => 'nullable|in:men,women',
+        ]);
         $team = Team::create($request->all());
         return response()->json($team, 201);
     }
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'gender' => 'nullable|in:men,women',
+        ]);
         $team = Team::findOrFail($id);
         $team->update($request->all());
         return response()->json($team, 200);

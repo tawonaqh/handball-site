@@ -199,23 +199,23 @@ export default function UsersPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
-            <Shield className="w-8 h-8 text-indigo-500" />
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center space-x-3">
+            <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-indigo-500 flex-shrink-0" />
             <span>Users</span>
           </h1>
-          <p className="text-gray-400 mt-2">Manage user accounts and permissions</p>
+          <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Manage user accounts and permissions</p>
         </div>
         
-        <Link href="/admin/users/create">
+        <Link href="/admin/users/create" className="flex-shrink-0">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            className="flex items-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Add User</span>
           </motion.button>
         </Link>
@@ -228,9 +228,9 @@ export default function UsersPage() {
         transition={{ delay: 0.1 }}
         className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6"
       >
-        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+        <div className="flex flex-col gap-3">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -240,43 +240,44 @@ export default function UsersPage() {
               className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
             />
           </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Status Filter */}
+            <div className="relative flex-1">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 appearance-none"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
 
-          {/* Status Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 appearance-none"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-              <option value="pending">Pending</option>
-            </select>
-          </div>
-
-          {/* Role Filter */}
-          <div className="relative">
-            <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 appearance-none"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="moderator">Moderator</option>
-              <option value="editor">Editor</option>
-              <option value="user">User</option>
-            </select>
+            {/* Role Filter */}
+            <div className="relative flex-1">
+              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="w-full pl-10 pr-8 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 appearance-none"
+              >
+                <option value="all">All Roles</option>
+                <option value="admin">Admin</option>
+                <option value="moderator">Moderator</option>
+                <option value="editor">Editor</option>
+                <option value="user">User</option>
+              </select>
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Users Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredUsers.length > 0 ? (
           filteredUsers.map((user, index) => (
             <UserCard key={user.id} user={user} index={index} />

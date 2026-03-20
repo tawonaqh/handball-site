@@ -34,31 +34,26 @@ export default function NewsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen pt-24 pb-20">
-        <div className="container mx-auto px-6">
-          
-          {/* Header */}
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full mb-6">
+            <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full mb-4 sm:mb-6">
               <FaNewspaper />
               <span className="font-semibold">News</span>
             </div>
-            
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
               Latest News
             </h1>
-            
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
               Stay updated with the latest handball news, match reports, and announcements
             </p>
           </motion.div>
 
-          {/* News Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
             {news.map((article) => (
               <NewsCard key={article.id} article={article} />
             ))}

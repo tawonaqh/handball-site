@@ -18,7 +18,7 @@ export default function NewsCard({ article }) {
       viewport={{ once: true }}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
-      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100"
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 w-full"
     >
       {/* Featured Image */}
       <div className="relative h-48 bg-gray-200 overflow-hidden">

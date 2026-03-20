@@ -90,14 +90,21 @@ const TeamCard = ({ team, index }) => {
               <span className="text-gray-400">Ranking:</span>
               <span className="text-green-400 font-semibold">{team.ranking?.points || 0} pts</span>
             </div>
-            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-              team.status === 'active' 
-                ? 'bg-green-500/20 text-green-400' 
-                : team.status === 'inactive'
-                ? 'bg-red-500/20 text-red-400'
-                : 'bg-yellow-500/20 text-yellow-400'
-            }`}>
-              {team.status || 'active'}
+            <div className="flex items-center gap-2">
+              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                team.gender === 'women' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+              }`}>
+                {team.gender === 'women' ? 'Women' : 'Men'}
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                team.status === 'active' 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : team.status === 'inactive'
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'bg-yellow-500/20 text-yellow-400'
+              }`}>
+                {team.status || 'active'}
+              </div>
             </div>
           </div>
         </div>
@@ -111,6 +118,7 @@ export default function TeamsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterGender, setFilterGender] = useState('all');
 
   useEffect(() => {
     async function loadTeams() {
@@ -133,7 +141,8 @@ export default function TeamsPage() {
                          team.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          team.coach?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || team.status === filterStatus;
-    return matchesSearch && matchesFilter;
+    const matchesGender = filterGender === 'all' || (team.gender || 'men') === filterGender;
+    return matchesSearch && matchesFilter && matchesGender;
   });
 
   if (loading) {
@@ -157,23 +166,23 @@ export default function TeamsPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
-            <Users className="w-8 h-8 text-green-500" />
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center space-x-3">
+            <Users className="w-7 h-7 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
             <span>Teams</span>
           </h1>
-          <p className="text-gray-400 mt-2">Manage team registrations and information</p>
+          <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Manage team registrations and information</p>
         </div>
         
-        <Link href="/admin/teams/create">
+        <Link href="/admin/teams/create" className="flex-shrink-0">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            className="flex items-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Register Team</span>
           </motion.button>
         </Link>
@@ -213,11 +222,24 @@ export default function TeamsPage() {
               <option value="pending">Pending</option>
             </select>
           </div>
+
+          {/* Gender Filter */}
+          <div className="relative">
+            <select
+              value={filterGender}
+              onChange={(e) => setFilterGender(e.target.value)}
+              className="px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Genders</option>
+              <option value="men">Men's</option>
+              <option value="women">Women's</option>
+            </select>
+          </div>
         </div>
       </motion.div>
 
       {/* Teams Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredTeams.length > 0 ? (
           filteredTeams.map((team, index) => (
             <TeamCard key={team.id} team={team} index={index} />

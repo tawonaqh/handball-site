@@ -29,42 +29,37 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed }) {
     <motion.header 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4"
+      className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50 px-3 sm:px-6 py-3 sm:py-4"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         
         {/* Left side */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {/* Mobile menu button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-xl bg-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-600/50 transition-all duration-300"
+            className="lg:hidden flex-shrink-0 p-2 rounded-xl bg-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-600/50 transition-all duration-300"
           >
             <Menu className="w-5 h-5" />
           </motion.button>
 
-          {/* Search */}
-          <div className="relative">
-            <motion.div
-              animate={{ width: searchFocused ? 320 : 280 }}
-              className="relative"
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search tournaments, teams, players..."
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-300"
-              />
-            </motion.div>
+          {/* Search — hidden on very small screens */}
+          <div className="hidden sm:block relative flex-1 max-w-xs lg:max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-300"
+            />
           </div>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
           
           {/* Notifications */}
           <motion.button
@@ -78,11 +73,11 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed }) {
             </span>
           </motion.button>
 
-          {/* Settings */}
+          {/* Settings — hidden on mobile */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-xl bg-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-600/50 transition-all duration-300"
+            className="hidden sm:flex p-2 rounded-xl bg-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-600/50 transition-all duration-300"
           >
             <Settings className="w-5 h-5" />
           </motion.button>
@@ -93,16 +88,16 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed }) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center space-x-3 p-2 rounded-xl bg-gray-700/50 hover:bg-gray-600/50 transition-all duration-300"
+              className="flex items-center gap-2 p-2 rounded-xl bg-gray-700/50 hover:bg-gray-600/50 transition-all duration-300"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
                 <User className="w-4 h-4 text-white" />
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-sm font-medium text-white">Admin User</div>
                 <div className="text-xs text-gray-400">Administrator</div>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} />
             </motion.button>
 
             {/* Profile dropdown menu */}

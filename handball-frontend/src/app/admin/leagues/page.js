@@ -63,12 +63,19 @@ const LeagueCard = ({ league, index }) => {
             <Calendar className="w-4 h-4" />
             <span>Season {league.season || new Date().getFullYear()}</span>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-            league.type === 'knockout'
-              ? 'bg-purple-500/20 text-purple-400'
-              : 'bg-blue-500/20 text-blue-400'
-          }`}>
-            {league.type === 'knockout' ? 'Knockout' : 'League'}
+          <div className="flex items-center gap-1">
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+              league.gender === 'women' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+            }`}>
+              {league.gender === 'women' ? 'Women' : 'Men'}
+            </div>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+              league.type === 'knockout'
+                ? 'bg-purple-500/20 text-purple-400'
+                : 'bg-blue-500/20 text-blue-400'
+            }`}>
+              {league.type === 'knockout' ? 'Knockout' : 'League'}
+            </div>
           </div>
         </div>
         
@@ -116,6 +123,7 @@ export default function LeaguesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterGender, setFilterGender] = useState('all');
 
   useEffect(() => {
     async function loadLeagues() {
@@ -137,7 +145,8 @@ export default function LeaguesPage() {
     const matchesSearch = league.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          league.division?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || league.status === filterStatus;
-    return matchesSearch && matchesFilter;
+    const matchesGender = filterGender === 'all' || (league.gender || 'men') === filterGender;
+    return matchesSearch && matchesFilter && matchesGender;
   });
 
   if (loading) {
@@ -161,23 +170,23 @@ export default function LeaguesPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
-            <Trophy className="w-8 h-8 text-blue-500" />
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center space-x-3">
+            <Trophy className="w-7 h-7 sm:w-8 sm:h-8 text-blue-500 flex-shrink-0" />
             <span>Tournaments</span>
           </h1>
-          <p className="text-gray-400 mt-2">Manage tournament competitions</p>
+          <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Manage tournament competitions</p>
         </div>
         
-        <Link href="/admin/leagues/create">
+        <Link href="/admin/leagues/create" className="flex-shrink-0">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            className="flex items-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Create Tournament</span>
           </motion.button>
         </Link>
@@ -217,11 +226,24 @@ export default function LeaguesPage() {
               <option value="completed">Completed</option>
             </select>
           </div>
+
+          {/* Gender Filter */}
+          <div className="relative">
+            <select
+              value={filterGender}
+              onChange={(e) => setFilterGender(e.target.value)}
+              className="px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 appearance-none"
+            >
+              <option value="all">All Genders</option>
+              <option value="men">Men's</option>
+              <option value="women">Women's</option>
+            </select>
+          </div>
         </div>
       </motion.div>
 
       {/* Leagues Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredLeagues.length > 0 ? (
           filteredLeagues.map((league, index) => (
             <LeagueCard key={league.id} league={league} index={index} />
