@@ -9,7 +9,11 @@ class League extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'gender', 'tournament_id'];
+    protected $fillable = [
+        'name', 'gender', 'tournament_id',
+        'type', 'season', 'description', 'max_teams',
+        'num_groups', 'teams_per_group', 'knockout_rounds',
+    ];
 
     public function teams()
     {
