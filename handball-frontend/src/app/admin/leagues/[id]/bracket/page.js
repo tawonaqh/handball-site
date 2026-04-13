@@ -2,10 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { RefreshCw, GitBranch, Calendar } from "lucide-react";
+import { RefreshCw, GitBranch, Calendar, ChevronDown } from "lucide-react";
 import { getBracket, generateBracket, generateFixtures, getWildcardTable, recalculateStandings } from "@/lib/api";
 import BracketView from "@/components/tournament/BracketView";
 import WildcardTable from "@/components/tournament/WildcardTable";
+
+/** Shared mobile-optimised label + input wrapper */
+function Field({ label, children }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-600">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls =
+  "w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-orange-400 bg-white touch-manipulation";
 
 export default function LeagueBracketPage() {
   const { id } = useParams();
@@ -15,7 +28,6 @@ export default function LeagueBracketPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
 
-  // Generate form state
   const [startDate, setStartDate] = useState("");
   const [teamIds, setTeamIds] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -34,19 +46,26 @@ export default function LeagueBracketPage() {
     });
   }, [id]);
 
-  const handleGenerateBracket = async () => {
-    const ids = teamIds.split(",").map((s) => parseInt(s.trim())).filter(Boolean);
+  const getTeamIds = () =>
+    teamIds.split(",").map((s) => parseInt(s.trim())).filter(Boolean);
+
+  const validate = () => {
+    const ids = getTeamIds();
     if (!ids.length || !startDate) {
-      setMessage({ type: "error", text: "Enter team IDs (comma-separated) and a start date." });
-      return;
+      setMessage({ type: "error", text: "Enter team IDs and a start date." });
+      return null;
     }
+    return ids;
+  };
+
+  const handleGenerateFixtures = async () => {
+    const ids = validate();
+    if (!ids) return;
     setGenerating(true);
     setMessage(null);
     try {
-      await generateBracket(id, ids, startDate);
-      const b = await getBracket(id);
-      setBracket(b);
-      setMessage({ type: "success", text: "Bracket generated successfully." });
+      await generateFixtures(id, ids, startDate);
+      setMessage({ type: "success", text: `Round-robin fixtures generated (${league?.fixture_type ?? "single"} fixture).` });
     } catch (e) {
       setMessage({ type: "error", text: e.message });
     } finally {
@@ -54,17 +73,16 @@ export default function LeagueBracketPage() {
     }
   };
 
-  const handleGenerateFixtures = async () => {
-    const ids = teamIds.split(",").map((s) => parseInt(s.trim())).filter(Boolean);
-    if (!ids.length || !startDate) {
-      setMessage({ type: "error", text: "Enter team IDs (comma-separated) and a start date." });
-      return;
-    }
+  const handleGenerateBracket = async () => {
+    const ids = validate();
+    if (!ids) return;
     setGenerating(true);
     setMessage(null);
     try {
-      await generateFixtures(id, ids, startDate);
-      setMessage({ type: "success", text: `Round-robin fixtures generated (${league?.fixture_type ?? "single"} fixture).` });
+      await generateBracket(id, ids, startDate);
+      const b = await getBracket(id);
+      setBracket(b);
+      setMessage({ type: "success", text: "Knockout bracket generated." });
     } catch (e) {
       setMessage({ type: "error", text: e.message });
     } finally {
@@ -96,19 +114,22 @@ export default function LeagueBracketPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+      {/* Header — stacks on mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{league?.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Type: <span className="font-medium capitalize">{league?.type ?? "league"}</span> ·
-            Fixture: <span className="font-medium capitalize">{league?.fixture_type ?? "single"}</span>
+          <h1 className="text-xl font-bold text-gray-900">{league?.name}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            <span className="capitalize">{league?.type ?? "league"}</span>
+            {" · "}
+            <span className="capitalize">{league?.fixture_type ?? "single"} fixture</span>
           </p>
         </div>
         <button
           onClick={handleRecalculate}
           disabled={recalculating}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 active:bg-gray-200 rounded-xl text-sm font-semibold transition-colors touch-manipulation w-full sm:w-auto"
         >
           <RefreshCw className={`w-4 h-4 ${recalculating ? "animate-spin" : ""}`} />
           Recalculate Standings
@@ -116,7 +137,7 @@ export default function LeagueBracketPage() {
       </div>
 
       {message && (
-        <div className={`px-4 py-3 rounded-lg text-sm font-medium ${
+        <div className={`px-4 py-3 rounded-xl text-sm font-medium ${
           message.type === "success"
             ? "bg-green-50 text-green-700 border border-green-200"
             : "bg-red-50 text-red-700 border border-red-200"
@@ -126,43 +147,40 @@ export default function LeagueBracketPage() {
       )}
 
       {/* Generate panel */}
-      <div className="card-modern">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
+        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
           <GitBranch className="w-5 h-5 text-orange-500" />
           Generate Fixtures / Bracket
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Team IDs (comma-separated)
-            </label>
+        {/* Inputs — full-width stacked, large touch targets */}
+        <div className="grid grid-cols-1 gap-4">
+          <Field label="Team IDs (comma-separated)">
             <input
               type="text"
+              inputMode="numeric"
               placeholder="e.g. 1, 2, 3, 4"
               value={teamIds}
               onChange={(e) => setTeamIds(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
+              className={inputCls}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Calendar className="w-4 h-4" /> Start Date
-            </label>
+          </Field>
+          <Field label="Start Date">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
+              className={inputCls}
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="flex gap-3 flex-wrap">
+        {/* Action buttons — full-width on mobile, side-by-side on sm+ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={handleGenerateFixtures}
             disabled={generating}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-2 py-4 bg-blue-500 active:bg-blue-600 text-white font-bold rounded-2xl transition-colors disabled:opacity-50 touch-manipulation"
           >
             {generating && <RefreshCw className="w-4 h-4 animate-spin" />}
             Generate Round-Robin
@@ -170,7 +188,7 @@ export default function LeagueBracketPage() {
           <button
             onClick={handleGenerateBracket}
             disabled={generating}
-            className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-2 py-4 bg-orange-500 active:bg-orange-600 text-white font-bold rounded-2xl transition-colors disabled:opacity-50 touch-manipulation"
           >
             {generating && <RefreshCw className="w-4 h-4 animate-spin" />}
             Generate Knockout Bracket
@@ -180,8 +198,8 @@ export default function LeagueBracketPage() {
 
       {/* Bracket visualization */}
       {bracket?.rounds?.length > 0 && (
-        <div className="card-modern">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
             <GitBranch className="w-5 h-5 text-orange-500" />
             Bracket
           </h2>
@@ -189,7 +207,6 @@ export default function LeagueBracketPage() {
         </div>
       )}
 
-      {/* Wildcard table */}
       {wildcards.length > 0 && <WildcardTable wildcards={wildcards} qualifyCount={4} />}
     </div>
   );

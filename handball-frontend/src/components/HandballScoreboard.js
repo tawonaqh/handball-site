@@ -290,89 +290,81 @@ const HandballScoreboard = () => {
 
   if (isSetup) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 text-slate-100 p-4 flex items-start justify-center pt-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="w-full max-w-3xl bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-2xl"
+          className="w-full max-w-2xl bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-800 shadow-2xl"
         >
-          <div className="flex items-center gap-3 mb-8">
-            <Settings className="text-blue-500" size={32} />
-            <h1 className="text-3xl font-bold">Handball Match Setup</h1>
+          <div className="flex items-center gap-3 mb-6">
+            <Settings className="text-blue-500 flex-shrink-0" size={28} />
+            <h1 className="text-xl sm:text-3xl font-bold">Handball Match Setup</h1>
           </div>
 
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-5">
+            {/* Duration row — stacks on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
                   Match Duration (Minutes)
                 </label>
                 <input 
-                  type="number" 
+                  type="number"
+                  inputMode="numeric"
                   value={matchLength} 
                   onChange={e => setMatchLength(Number(e.target.value))} 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation"
                 />
               </div>
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                  Auto-Stop Logic
-                </label>
-                <div className="text-xs text-slate-400 leading-tight">
-                  Clock stops at {matchLength/2}:00 (Halftime) and {matchLength}:00 (Full-time) automatically.
+              <div className="bg-slate-950 px-4 py-3 rounded-xl border border-slate-800 flex items-center">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    Auto-Stop Logic
+                  </label>
+                  <div className="text-xs text-slate-400 leading-tight">
+                    Stops at {matchLength/2}:00 (Halftime) and {matchLength}:00 (Full-time).
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <input 
-                  placeholder="Team A Name" 
-                  value={teamAName} 
-                  onChange={e => setTeamAName(e.target.value)} 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-blue-400 font-bold outline-none"
-                />
-                <div>
-                  <label className="block text-xs text-slate-500 mb-2">
-                    Players (Format: Number:Name, comma separated)
-                  </label>
-                  <textarea 
-                    value={rosterInputA} 
-                    onChange={e => setRosterInputA(e.target.value)} 
-                    className="w-full h-48 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono outline-none"
+            {/* Team rosters — stacked on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {[
+                { label: 'Team A', value: teamAName, onChange: setTeamAName, roster: rosterInputA, setRoster: setRosterInputA, color: 'text-blue-400', ring: 'focus:ring-blue-500' },
+                { label: 'Team B', value: teamBName, onChange: setTeamBName, roster: rosterInputB, setRoster: setRosterInputB, color: 'text-red-400', ring: 'focus:ring-red-500' },
+              ].map(t => (
+                <div key={t.label} className="space-y-3">
+                  <input 
+                    placeholder={`${t.label} Name`}
+                    value={t.value} 
+                    onChange={e => t.onChange(e.target.value)} 
+                    className={`w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-base ${t.color} font-bold outline-none ${t.ring} focus:ring-2 touch-manipulation`}
                   />
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1.5">
+                      Players (Number:Name, comma separated)
+                    </label>
+                    <textarea 
+                      value={t.roster} 
+                      onChange={e => t.setRoster(e.target.value)} 
+                      rows={6}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    />
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-4">
-                <input 
-                  placeholder="Team B Name" 
-                  value={teamBName} 
-                  onChange={e => setTeamBName(e.target.value)} 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-red-400 font-bold outline-none"
-                />
-                <div>
-                  <label className="block text-xs text-slate-500 mb-2">
-                    Players (Format: Number:Name, comma separated)
-                  </label>
-                  <textarea 
-                    value={rosterInputB} 
-                    onChange={e => setRosterInputB(e.target.value)} 
-                    className="w-full h-48 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono outline-none"
-                  />
-                </div>
-              </div>
+              ))}
             </div>
 
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
               <p className="text-sm text-blue-300">
-                <strong>Rules:</strong> 14 players per team (7 starters + 7 subs). Max 3 timeouts per match, 2 per half (combined), 1 minute each.
+                14 players per team (7 starters + 7 subs). Max 3 timeouts per match, 2 per half, 1 min each.
               </p>
             </div>
 
             <button 
               onClick={startMatch} 
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 active:bg-blue-500 text-white font-bold py-4 rounded-2xl text-base transition-all flex items-center justify-center gap-2 touch-manipulation"
             >
               <CheckCircle2 size={20} /> Start Match
             </button>
@@ -386,27 +378,25 @@ const HandballScoreboard = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* TOP SCOREBOARD */}
-        <div className="grid grid-cols-3 gap-4 bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
-          
+        {/* TOP SCOREBOARD — always 3-col but scales font with clamp */}
+        <div className="scoreboard-grid bg-slate-900 px-3 py-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
+
           {/* TIMEOUT OVERLAY */}
           {timeoutCountdown !== null && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               className="absolute inset-0 bg-blue-600/95 backdrop-blur-md z-50 flex flex-col items-center justify-center"
             >
-              <div className="text-sm font-bold uppercase tracking-widest mb-2">
+              <div className="text-xs sm:text-sm font-bold uppercase tracking-widest mb-2">
                 {activeTimeoutTeam} Time-Out
               </div>
-              <div className="text-9xl font-mono font-black">{timeoutCountdown}</div>
-              <button 
-                onClick={() => {
-                  setTimeoutCountdown(null);
-                  setActiveTimeoutTeam(null);
-                  setIsRunning(true);
-                }} 
-                className="mt-8 px-6 py-2 bg-white/10 rounded-full text-xs hover:bg-white/20 transition-colors"
+              <div className="clock-display font-mono font-black" style={{ fontSize: 'clamp(4rem,20vw,7rem)' }}>
+                {timeoutCountdown}
+              </div>
+              <button
+                onClick={() => { setTimeoutCountdown(null); setActiveTimeoutTeam(null); setIsRunning(true); }}
+                className="mt-6 px-6 py-2 bg-white/10 rounded-full text-xs active:bg-white/20 touch-manipulation"
               >
                 Resume Match
               </button>
@@ -414,205 +404,157 @@ const HandballScoreboard = () => {
           )}
 
           {/* TEAM A */}
-          <div className="text-center">
-            <div className="text-blue-400 font-bold uppercase text-sm tracking-widest mb-2">
+          <div className="text-center flex flex-col items-center justify-center">
+            <div className="text-blue-400 font-bold uppercase text-[10px] sm:text-sm tracking-widest mb-1 truncate max-w-full px-1">
               {teamAName}
             </div>
-            <div className="text-9xl font-black tabular-nums leading-none mb-4">
+            <div className="score-display font-black tabular-nums leading-none mb-2" style={{ fontSize: 'clamp(3rem,18vw,6rem)' }}>
               {scoreA}
             </div>
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-1.5">
               {[...Array(2)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-8 h-3 rounded-full border border-blue-500/30 ${
-                    i < timeoutsUsedA.length ? 'bg-slate-800 shadow-inner' : 'bg-blue-500 shadow-lg shadow-blue-500/20'
-                  }`} 
-                />
+                <div key={i} className={`w-5 h-2 sm:w-8 sm:h-3 rounded-full border border-blue-500/30 ${i < timeoutsUsedA.length ? 'bg-slate-800' : 'bg-blue-500'}`} />
               ))}
             </div>
           </div>
 
           {/* CLOCK */}
-          <div className="flex flex-col items-center justify-center border-x border-slate-800/50">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold text-slate-500 tracking-widest uppercase">
-                Half {currentHalf}
-              </span>
-              {isHalftimeReached && (
-                <span className="bg-yellow-500 text-slate-950 text-[10px] px-2 py-0.5 rounded font-black">
-                  HALFTIME
-                </span>
-              )}
-              {isMatchOver && (
-                <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-black">
-                  FULL TIME
-                </span>
-              )}
+          <div className="flex flex-col items-center justify-center border-x border-slate-800/50 px-1">
+            <div className="flex flex-wrap items-center justify-center gap-1 mb-1">
+              <span className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase">H{currentHalf}</span>
+              {isHalftimeReached && <span className="bg-yellow-500 text-slate-950 text-[8px] px-1.5 py-0.5 rounded font-black">HT</span>}
+              {isMatchOver && <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded font-black">FT</span>}
             </div>
-            
-            <div className={`text-7xl font-mono font-bold tabular-nums mb-6 ${
-              isRunning && timeoutCountdown === null ? 'text-white' : 
-              (isMatchOver || isHalftimeReached) ? 'text-red-500' : 
-              'text-yellow-500'
-            }`}>
+
+            <div className={`clock-display font-mono font-bold tabular-nums mb-3 ${
+              isRunning && timeoutCountdown === null ? 'text-white' :
+              (isMatchOver || isHalftimeReached) ? 'text-red-500' : 'text-yellow-500'
+            }`} style={{ fontSize: 'clamp(1.4rem,8vw,3.5rem)' }}>
               {formatTime(time)}
             </div>
-            
-            <button 
+
+            <button
               disabled={isMatchOver}
-              onClick={handleToggleTimer} 
-              className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
-                isMatchOver ? 'bg-slate-800 cursor-not-allowed' : 
-                isRunning && timeoutCountdown === null ? 'bg-red-500 hover:bg-red-600' : 
-                'bg-emerald-500 hover:bg-emerald-600'
+              onClick={handleToggleTimer}
+              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all touch-manipulation ${
+                isMatchOver ? 'bg-slate-800 cursor-not-allowed' :
+                isRunning && timeoutCountdown === null ? 'bg-red-500 active:bg-red-600' : 'bg-emerald-500 active:bg-emerald-600'
               } text-slate-950 shadow-xl`}
             >
-              {isRunning && timeoutCountdown === null ? (
-                <Pause size={32} fill="currentColor" />
-              ) : (
-                <Play size={32} fill="currentColor" className="ml-1" />
-              )}
+              {isRunning && timeoutCountdown === null
+                ? <Pause size={22} fill="currentColor" />
+                : <Play size={22} fill="currentColor" className="ml-0.5" />}
             </button>
-            
-            <div className="mt-4 text-[10px] text-slate-500 text-center">
-              Timeouts Used: {getTotalMatchTimeouts()}/3
+
+            <div className="mt-2 text-[9px] text-slate-500 text-center">
+              {getTotalMatchTimeouts()}/3 T.O.
             </div>
           </div>
 
           {/* TEAM B */}
-          <div className="text-center">
-            <div className="text-red-400 font-bold uppercase text-sm tracking-widest mb-2">
+          <div className="text-center flex flex-col items-center justify-center">
+            <div className="text-red-400 font-bold uppercase text-[10px] sm:text-sm tracking-widest mb-1 truncate max-w-full px-1">
               {teamBName}
             </div>
-            <div className="text-9xl font-black tabular-nums leading-none mb-4">
+            <div className="score-display font-black tabular-nums leading-none mb-2" style={{ fontSize: 'clamp(3rem,18vw,6rem)' }}>
               {scoreB}
             </div>
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-1.5">
               {[...Array(2)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-8 h-3 rounded-full border border-red-500/30 ${
-                    i < timeoutsUsedB.length ? 'bg-slate-800 shadow-inner' : 'bg-red-500 shadow-lg shadow-red-500/20'
-                  }`} 
-                />
+                <div key={i} className={`w-5 h-2 sm:w-8 sm:h-3 rounded-full border border-red-500/30 ${i < timeoutsUsedB.length ? 'bg-slate-800' : 'bg-red-500'}`} />
               ))}
             </div>
           </div>
         </div>
 
-        {/* ACTIVE PLAYERS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* ACTIVE PLAYERS — single col on mobile, 2-col on lg */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {[
             { team: 'A', name: teamAName, players: playersA, onCourt: onCourtA, color: 'text-blue-400', border: 'border-blue-500/20' },
             { team: 'B', name: teamBName, players: playersB, onCourt: onCourtB, color: 'text-red-400', border: 'border-red-500/20' }
           ].map(t => (
-            <div key={t.team} className="space-y-4">
-              <div className="flex justify-between items-center px-2">
-                <h3 className={`${t.color} font-bold flex items-center gap-2`}>
-                  <Users size={18}/> {t.name} ON COURT
+            <div key={t.team} className="space-y-2">
+              <div className="flex justify-between items-center px-1">
+                <h3 className={`${t.color} font-bold flex items-center gap-1.5 text-sm`}>
+                  <Users size={15}/> {t.name}
                 </h3>
-                <span className="text-[10px] text-slate-500 font-bold uppercase">
-                  7 Active Players
-                </span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase">On Court</span>
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1.5">
                 {t.players.filter(p => t.onCourt.includes(p.id)).map(player => {
                   const isSuspended = penalties.some(pen => pen.playerId === player.id);
                   const isOut = isSuspended || player.isRedCarded || player.isBlueCarded;
-                  
+
                   return (
-                    <div 
-                      key={player.id} 
-                      className={`bg-slate-900 p-3 rounded-2xl flex items-center justify-between border transition-all ${
+                    <div
+                      key={player.id}
+                      className={`bg-slate-900 px-2 py-2 rounded-xl border transition-all ${
                         isOut ? 'border-red-600/50 bg-red-950/10' : 'border-slate-800'
                       }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-slate-500 font-mono font-bold w-6">
-                          #{player.number}
-                        </span>
-                        <div className="flex flex-col">
-                          <span className={`font-semibold ${isOut ? 'line-through opacity-50' : ''}`}>
-                            {player.name}
+                      {/* Top row: number + name + status */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-slate-500 font-mono font-bold text-xs w-5 flex-shrink-0">
+                            #{player.number}
                           </span>
-                          {isOut && (
-                            <span className="text-[10px] text-red-500 font-bold flex items-center gap-1">
-                              <ShieldAlert size={10}/> 
-                              {player.isBlueCarded ? 'BLUE CARD' : player.isRedCarded ? 'RED CARD' : 'SUSPENDED'}
+                          <div className="min-w-0">
+                            <span className={`font-semibold text-sm truncate block ${isOut ? 'line-through opacity-50' : ''}`}>
+                              {player.name}
                             </span>
-                          )}
-                          {player.yellowCards > 0 && !isOut && (
-                            <span className="text-[10px] text-yellow-500 font-bold">
-                              {player.yellowCards} Yellow Card{player.yellowCards > 1 ? 's' : ''}
-                            </span>
-                          )}
+                            {isOut && (
+                              <span className="text-[9px] text-red-500 font-bold flex items-center gap-0.5">
+                                <ShieldAlert size={9}/>
+                                {player.isBlueCarded ? 'BLUE' : player.isRedCarded ? 'RED' : 'SUSP'}
+                              </span>
+                            )}
+                            {player.yellowCards > 0 && !isOut && (
+                              <span className="text-[9px] text-yellow-500 font-bold">
+                                {player.yellowCards}× YC
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Goal counter — always visible, right-aligned */}
+                        <div className={`flex items-center bg-slate-950 rounded-lg px-1 gap-1 border flex-shrink-0 ${t.border}`}>
+                          <button
+                            onClick={() => handleGoal(t.team, player, -1)}
+                            disabled={!isRunning || timeoutCountdown !== null || isOut}
+                            className="w-7 h-7 flex items-center justify-center text-slate-500 active:text-white disabled:opacity-20 touch-manipulation"
+                          >–</button>
+                          <span className={`font-black text-base w-5 text-center ${t.color}`}>{player.goals}</span>
+                          <button
+                            onClick={() => handleGoal(t.team, player, 1)}
+                            disabled={!isRunning || timeoutCountdown !== null || isOut}
+                            className="w-7 h-7 flex items-center justify-center text-emerald-500 active:text-emerald-400 disabled:opacity-20 touch-manipulation"
+                          >+</button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        {/* PENALTY BUTTONS */}
-                        <div className="flex gap-1">
-                          <button 
-                            onClick={() => handlePenalty(t.team, player, 'YELLOW')} 
-                            className="w-8 h-8 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 rounded-lg hover:bg-yellow-500/30"
-                            title="Yellow Card (Warning)"
-                          >
-                            <div className="w-3 h-4 bg-yellow-500 rounded-sm"/>
-                          </button>
-                          <button 
-                            onClick={() => handlePenalty(t.team, player, '2MIN')} 
-                            className="w-8 h-8 flex items-center justify-center text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-lg hover:bg-yellow-500/20"
-                            title="2-Minute Suspension"
-                          >
-                            2'
-                          </button>
-                          <button 
-                            onClick={() => handlePenalty(t.team, player, 'RED')} 
-                            className="w-8 h-8 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded-lg hover:bg-red-600/30"
-                            title="Red Card + 2 Min"
-                          >
-                            <div className="w-3 h-4 bg-red-600 rounded-sm"/>
-                          </button>
-                          <button 
-                            onClick={() => handlePenalty(t.team, player, 'BLUE')} 
-                            className="w-8 h-8 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded-lg hover:bg-blue-600/30"
-                            title="Blue Card + Disqualification"
-                          >
-                            <div className="w-3 h-4 bg-blue-600 rounded-sm"/>
-                          </button>
-                        </div>
-
-                        {/* SUBSTITUTION */}
-                        <button 
-                          onClick={() => setSubmittingFor({ team: t.team, playerId: player.id })} 
-                          className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 text-slate-400"
-                          title="Substitute Player"
-                        >
-                          <ArrowLeftRight size={16}/>
+                      {/* Bottom row: discipline buttons + sub — wraps naturally */}
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <button onClick={() => handlePenalty(t.team, player, 'YELLOW')}
+                          className="w-8 h-8 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 rounded-lg active:bg-yellow-500/40 touch-manipulation" title="Yellow Card">
+                          <div className="w-2.5 h-3.5 bg-yellow-500 rounded-sm"/>
                         </button>
-
-                        {/* GOAL COUNTER */}
-                        <div className={`flex items-center bg-slate-950 rounded-xl p-1 gap-3 border ${t.border}`}>
-                          <button 
-                            onClick={() => handleGoal(t.team, player, -1)} 
-                            disabled={!isRunning || timeoutCountdown !== null || isOut} 
-                            className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-white disabled:opacity-20"
-                          >
-                            -
-                          </button>
-                          <span className={`font-black text-xl w-6 text-center ${t.color}`}>
-                            {player.goals}
-                          </span>
-                          <button 
-                            onClick={() => handleGoal(t.team, player, 1)} 
-                            disabled={!isRunning || timeoutCountdown !== null || isOut} 
-                            className="w-8 h-8 flex items-center justify-center text-emerald-500 hover:text-emerald-400 disabled:opacity-20"
-                          >
-                            +
-                          </button>
-                        </div>
+                        <button onClick={() => handlePenalty(t.team, player, '2MIN')}
+                          className="w-8 h-8 flex items-center justify-center text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-lg active:bg-yellow-500/20 touch-manipulation" title="2-Min Suspension">
+                          2'
+                        </button>
+                        <button onClick={() => handlePenalty(t.team, player, 'RED')}
+                          className="w-8 h-8 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded-lg active:bg-red-600/40 touch-manipulation" title="Red Card">
+                          <div className="w-2.5 h-3.5 bg-red-600 rounded-sm"/>
+                        </button>
+                        <button onClick={() => handlePenalty(t.team, player, 'BLUE')}
+                          className="w-8 h-8 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded-lg active:bg-blue-600/40 touch-manipulation" title="Blue Card">
+                          <div className="w-2.5 h-3.5 bg-blue-600 rounded-sm"/>
+                        </button>
+                        <button onClick={() => setSubmittingFor({ team: t.team, playerId: player.id })}
+                          className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-lg active:bg-slate-700 text-slate-400 touch-manipulation" title="Substitute">
+                          <ArrowLeftRight size={14}/>
+                        </button>
                       </div>
                     </div>
                   );
@@ -708,79 +650,51 @@ const HandballScoreboard = () => {
       <AnimatePresence>
         {showPauseModal && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              className="bg-slate-900 border border-slate-700 rounded-3xl p-8 w-full max-w-lg shadow-2xl"
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-8 w-full max-w-lg shadow-2xl"
             >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold">Match Stoppage</h2>
-                <button 
-                  onClick={() => setShowPauseModal(false)} 
-                  className="text-slate-500 hover:text-white"
-                >
-                  ✕
-                </button>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Match Stoppage</h2>
+                <button onClick={() => setShowPauseModal(false)} className="text-slate-500 active:text-white text-xl touch-manipulation">✕</button>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    disabled={
-                      timeoutsUsedA.length >= 2 || 
-                      getTotalHalfTimeouts() >= 2 || 
-                      getTotalMatchTimeouts() >= 3
-                    }
-                    onClick={() => confirmTimeout('A')}
-                    className="flex flex-col gap-2 p-6 rounded-2xl border border-slate-800 hover:border-blue-500 disabled:opacity-20 transition-all text-left bg-slate-950/50"
-                  >
-                    <span className="text-blue-400 font-bold text-sm uppercase">
-                      T.O. {teamAName}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      Left: {2 - timeoutsUsedA.length} Team / {2 - getTotalHalfTimeouts()} Half
-                    </span>
-                  </button>
-
-                  <button 
-                    disabled={
-                      timeoutsUsedB.length >= 2 || 
-                      getTotalHalfTimeouts() >= 2 || 
-                      getTotalMatchTimeouts() >= 3
-                    }
-                    onClick={() => confirmTimeout('B')}
-                    className="flex flex-col gap-2 p-6 rounded-2xl border border-slate-800 hover:border-red-500 disabled:opacity-20 transition-all text-left bg-slate-950/50"
-                  >
-                    <span className="text-red-400 font-bold text-sm uppercase">
-                      T.O. {teamBName}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      Left: {2 - timeoutsUsedB.length} Team / {2 - getTotalHalfTimeouts()} Half
-                    </span>
-                  </button>
+              <div className="space-y-3">
+                {/* Timeout buttons — stack on xs, side-by-side on sm+ */}
+                <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
+                  {[
+                    { team: 'A', name: teamAName, used: timeoutsUsedA, color: 'text-blue-400', hover: 'hover:border-blue-500' },
+                    { team: 'B', name: teamBName, used: timeoutsUsedB, color: 'text-red-400', hover: 'hover:border-red-500' },
+                  ].map(t => (
+                    <button
+                      key={t.team}
+                      disabled={t.used.length >= 2 || getTotalHalfTimeouts() >= 2 || getTotalMatchTimeouts() >= 3}
+                      onClick={() => confirmTimeout(t.team)}
+                      className={`flex flex-col gap-1 p-4 rounded-2xl border border-slate-800 ${t.hover} disabled:opacity-20 transition-all text-left bg-slate-950/50 touch-manipulation`}
+                    >
+                      <span className={`${t.color} font-bold text-sm uppercase`}>T.O. {t.name}</span>
+                      <span className="text-[10px] text-slate-500">
+                        Left: {2 - t.used.length} team · {2 - getTotalHalfTimeouts()} half
+                      </span>
+                    </button>
+                  ))}
                 </div>
 
                 {getTotalHalfTimeouts() >= 2 && (
-                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-500 text-[10px] flex items-center gap-2">
-                    <AlertTriangle size={14}/> 
-                    Maximum combined timeouts (2) for Half {currentHalf} reached.
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-500 text-xs flex items-center gap-2">
+                    <AlertTriangle size={14}/> Max timeouts for Half {currentHalf} reached.
                   </div>
                 )}
-
                 {getTotalMatchTimeouts() >= 3 && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] flex items-center gap-2">
-                    <AlertTriangle size={14}/> 
-                    Maximum match timeouts (3) reached.
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs flex items-center gap-2">
+                    <AlertTriangle size={14}/> Maximum match timeouts (3) reached.
                   </div>
                 )}
 
-                <button 
-                  onClick={() => { 
-                    setIsRunning(false); 
-                    setShowPauseModal(false); 
-                    addLog("TECHNICAL TIMEOUT", "OFFICIAL", "MATCH", "Technical stoppage"); 
-                  }} 
-                  className="w-full p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold transition-all"
+                <button
+                  onClick={() => { setIsRunning(false); setShowPauseModal(false); addLog("TECHNICAL TIMEOUT", "OFFICIAL", "MATCH", "Technical stoppage"); }}
+                  className="w-full p-4 rounded-xl bg-slate-800 active:bg-slate-700 font-bold transition-all touch-manipulation"
                 >
                   Technical Time-Out
                 </button>

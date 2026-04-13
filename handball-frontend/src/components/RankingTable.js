@@ -67,8 +67,8 @@ export default function RankingTable({ rankings, title = "League Standings" }) {
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
       </div>
 
-      {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto">
+      {/* Desktop Table — only on lg+ so portrait phones always get cards */}
+      <div className="hidden lg:block overflow-x-auto responsive-table-wrapper">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
@@ -136,8 +136,8 @@ export default function RankingTable({ rankings, title = "League Standings" }) {
         </table>
       </div>
 
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-3">
+      {/* Mobile Cards — shown below lg */}
+      <div className="lg:hidden space-y-3">
         {rankings.map((ranking, index) => {
           const position = index + 1;
           const goalDifference = (ranking.goals_for || 0) - (ranking.goals_against || 0);

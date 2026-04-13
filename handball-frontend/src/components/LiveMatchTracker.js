@@ -491,116 +491,85 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
   };
 
   const PlayerRow = ({ player, team, isOnCourt }) => {
-    if (!player) return null; // Safety check
+    if (!player) return null;
     const suspended = isPlayerSuspended(player.id);
     const canScore = isRunning && !suspended && !player.isRedCarded && isOnCourt;
 
     return (
-      <div className={`bg-slate-900 p-2 rounded-lg flex items-center justify-between border transition-all ${
-        player.isRedCarded ? 'border-red-900 opacity-40' : 
-        suspended ? 'border-yellow-700/50 bg-yellow-950/20' : 
+      <div className={`bg-slate-900 px-2 py-2 rounded-xl border transition-all ${
+        player.isRedCarded ? 'border-red-900 opacity-40' :
+        suspended ? 'border-yellow-700/50 bg-yellow-950/20' :
         'border-slate-800'
       }`}>
-        <div className="flex items-center gap-3">
-          <span className="text-slate-500 font-mono font-bold w-5 text-xs">#{player.number}</span>
-          <div>
-            <div className={`text-sm font-semibold ${player.isRedCarded ? 'line-through' : ''}`}>
-              {player.name}
+        {/* Row 1: number + name + goal counter */}
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-slate-500 font-mono font-bold text-xs w-5 flex-shrink-0">#{player.number}</span>
+            <div className="min-w-0">
+              <div className={`text-sm font-semibold truncate ${player.isRedCarded ? 'line-through' : ''}`}>
+                {player.name}
+              </div>
+              <div className="flex gap-0.5 items-center mt-0.5">
+                {player.yellowCards > 0 && [...Array(player.yellowCards)].map((_, i) => (
+                  <div key={i} className="w-1.5 h-2.5 bg-yellow-500 rounded-sm" />
+                ))}
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className={`w-1.5 h-1 rounded-full ${i < player.suspensions ? 'bg-yellow-500' : 'bg-slate-800'}`} />
+                ))}
+                {player.isRedCarded && <Ban size={9} className="text-red-500 ml-0.5" />}
+              </div>
             </div>
-            <div className="flex gap-1 mt-0.5 items-center">
-              {/* Yellow Cards - show actual count */}
-              {player.yellowCards > 0 && (
-                <div className="flex items-center gap-0.5">
-                  {[...Array(player.yellowCards)].map((_, i) => (
-                    <div key={i} className="w-2 h-3 bg-yellow-500 rounded-sm" />
-                  ))}
-                </div>
-              )}
-              {/* 2-Min Suspensions */}
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className={`w-2 h-1 rounded-full ${
-                  i < player.suspensions ? 'bg-yellow-500' : 'bg-slate-800'
-                }`} />
-              ))}
-              {/* Red Card */}
-              {player.isRedCarded && <Ban size={10} className="text-red-500 ml-1" />}
-            </div>
+          </div>
+
+          {/* Goal counter */}
+          <div className={`flex items-center bg-slate-950 rounded-lg px-0.5 gap-0.5 border flex-shrink-0 ${
+            team === 'A' ? 'border-blue-500/20' : 'border-red-500/20'
+          }`}>
+            <button onClick={() => handleGoal(team, player.id, -1)}
+              disabled={!isRunning || player.goals === 0 || !isOnCourt}
+              className="w-7 h-7 flex items-center justify-center text-slate-500 active:text-red-400 disabled:opacity-0 touch-manipulation">
+              <Minus size={13}/>
+            </button>
+            <span className={`w-5 text-center text-sm font-bold ${team === 'A' ? 'text-blue-400' : 'text-red-400'}`}>
+              {player.goals}
+            </span>
+            <button onClick={() => handleGoal(team, player.id, 1)}
+              disabled={!canScore}
+              className="w-7 h-7 flex items-center justify-center active:text-emerald-400 disabled:text-slate-700 touch-manipulation">
+              {!isRunning ? <Lock size={11} className="text-slate-600" /> :
+               suspended ? <Timer size={13} className="text-yellow-500" /> :
+               <Plus size={13} className="text-emerald-500" />}
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {isOnCourt && !player.isRedCarded && (
-            <>
-              <button 
-                onClick={() => addYellowCard(team, player)}
-                className="w-6 h-6 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 rounded hover:bg-yellow-500/30"
-                title="Yellow Card (Warning)"
-              >
-                <div className="w-2 h-3 bg-yellow-500 rounded-sm"/>
-              </button>
-              <button 
-                onClick={() => addTwoMinFoul(team, player)}
-                className="px-1.5 py-0.5 text-[9px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded hover:bg-yellow-500 hover:text-black"
-                title="2-Minute Suspension"
-              >
-                2'
-              </button>
-              <button 
-                onClick={() => addRedCard(team, player)}
-                className="w-6 h-6 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded hover:bg-red-600/30"
-                title="Red Card + 2 Min"
-              >
-                <div className="w-2 h-3 bg-red-600 rounded-sm"/>
-              </button>
-              <button 
-                onClick={() => addBlueCard(team, player)}
-                className="w-6 h-6 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded hover:bg-blue-600/30"
-                title="Blue Card + Disqualification"
-              >
-                <div className="w-2 h-3 bg-blue-600 rounded-sm"/>
-              </button>
-            </>
-          )}
-          {isOnCourt && (
-            <button 
-              disabled={suspended}
+        {/* Row 2: discipline + sub — wraps on narrow screens */}
+        {isOnCourt && !player.isRedCarded && (
+          <div className="flex items-center gap-1 flex-wrap">
+            <button onClick={() => addYellowCard(team, player)}
+              className="w-8 h-8 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 rounded-lg active:bg-yellow-500/40 touch-manipulation" title="Yellow Card">
+              <div className="w-2 h-3 bg-yellow-500 rounded-sm"/>
+            </button>
+            <button onClick={() => addTwoMinFoul(team, player)}
+              className="w-8 h-8 flex items-center justify-center text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-lg active:bg-yellow-500/20 touch-manipulation" title="2-Min Suspension">
+              2'
+            </button>
+            <button onClick={() => addRedCard(team, player)}
+              className="w-8 h-8 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded-lg active:bg-red-600/40 touch-manipulation" title="Red Card">
+              <div className="w-2 h-3 bg-red-600 rounded-sm"/>
+            </button>
+            <button onClick={() => addBlueCard(team, player)}
+              className="w-8 h-8 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded-lg active:bg-blue-600/40 touch-manipulation" title="Blue Card">
+              <div className="w-2 h-3 bg-blue-600 rounded-sm"/>
+            </button>
+            <button disabled={suspended}
               onClick={() => setSubmittingFor({ team, playerId: player.id })}
-              className={`p-1.5 rounded bg-slate-800 transition-colors ${
-                suspended ? 'opacity-20 cursor-not-allowed' : 'hover:bg-blue-600'
-              }`}
-              title="Substitute"
-            >
-              <ArrowLeftRight size={14} />
-            </button>
-          )}
-          <div className={`flex items-center bg-slate-950 rounded p-0.5 gap-1 border ${
-            !isRunning ? 'border-slate-800' : 'border-transparent'
-          }`}>
-            <button 
-              onClick={() => handleGoal(team, player.id, -1)} 
-              disabled={!isRunning || player.goals === 0 || !isOnCourt}
-              className="p-1 hover:text-red-400 disabled:opacity-0"
-            >
-              <Minus size={14}/>
-            </button>
-            <span className={`w-6 text-center text-sm font-bold ${
-              team === 'A' ? 'text-blue-400' : 'text-red-400'
-            }`}>
-              {player.goals}
-            </span>
-            <button 
-              onClick={() => handleGoal(team, player.id, 1)} 
-              disabled={!canScore}
-              className={`p-1 transition-colors ${
-                canScore ? 'hover:text-emerald-400' : 'text-slate-700'
-              }`}
-            >
-              {!isRunning ? <Lock size={12} className="text-slate-600" /> : 
-               suspended ? <Timer size={14} className="text-yellow-500" /> : 
-               <Plus size={14}/>}
+              className={`w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 touch-manipulation ${suspended ? 'opacity-20 cursor-not-allowed' : 'active:bg-blue-600'}`}
+              title="Substitute">
+              <ArrowLeftRight size={13} />
             </button>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -609,65 +578,70 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 font-sans">
       {/* SETUP SCREEN */}
       {isSetup && (
-        <div className="max-w-2xl mx-auto mt-20">
+        <div className="max-w-lg mx-auto mt-8 px-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-2xl"
+            className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-2xl"
           >
-            <h1 className="text-3xl font-bold mb-8 text-center">Match Setup</h1>
-            
-            <div className="space-y-6">
+            <h1 className="text-2xl font-bold mb-6 text-center">Match Setup</h1>
+
+            <div className="space-y-5">
+              {/* Duration — large select for thumb use */}
               <div>
-                <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
-                  Match Duration (Minutes)
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Match Duration
                 </label>
                 <select
                   value={matchDuration}
                   onChange={(e) => setMatchDuration(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-4 text-base outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation"
                 >
-                  <option value={40}>40 Minutes (20 min halves)</option>
-                  <option value={50}>50 Minutes (25 min halves)</option>
-                  <option value={60}>60 Minutes (30 min halves)</option>
-                  <option value={70}>70 Minutes (35 min halves)</option>
-                  <option value={80}>80 Minutes (40 min halves)</option>
+                  <option value={40}>40 min (20 min halves)</option>
+                  <option value={50}>50 min (25 min halves)</option>
+                  <option value={60}>60 min (30 min halves)</option>
+                  <option value={70}>70 min (35 min halves)</option>
+                  <option value={80}>80 min (40 min halves)</option>
                 </select>
-                <p className="text-xs text-slate-500 mt-2">
-                  Halftime will automatically trigger at {matchDuration/2} minutes
+                <p className="text-xs text-slate-500 mt-1.5">
+                  Halftime auto-triggers at {matchDuration / 2} min
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Team names — stacked on mobile, side-by-side on sm+ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                     Home Team
                   </label>
                   <input
                     value={teamAName}
                     onChange={(e) => setTeamAName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-blue-400 font-bold outline-none"
+                    autoComplete="off"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-4 text-base text-blue-400 font-bold outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                     Away Team
                   </label>
                   <input
                     value={teamBName}
                     onChange={(e) => setTeamBName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-red-400 font-bold outline-none"
+                    autoComplete="off"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-4 text-base text-red-400 font-bold outline-none focus:ring-2 focus:ring-red-500 touch-manipulation"
                   />
                 </div>
               </div>
 
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                 <p className="text-sm text-blue-300">
-                  <strong>Rules:</strong> Max 3 timeouts per match, 2 per half (combined), 1 minute each. 
+                  Max 3 timeouts per match · 2 per half · 1 min each.
                   Clock auto-stops at halftime and full-time.
                 </p>
               </div>
 
+              {/* Big CTA — easy to tap on court */}
               <button
                 onClick={() => {
                   setIsSetup(false);
@@ -679,7 +653,7 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
                     type: 'KICKOFF'
                   }, ...prev]);
                 }}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all"
+                className="w-full bg-blue-600 active:bg-blue-500 text-white font-bold py-5 rounded-2xl text-lg transition-all touch-manipulation"
               >
                 Start Match
               </button>
@@ -730,8 +704,8 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           </div>
         </div>
 
-        {/* HEADER SCOREBOARD */}
-        <div className="grid grid-cols-3 gap-4 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
+        {/* HEADER SCOREBOARD — fluid 3-col, scales with clamp */}
+        <div className="scoreboard-grid bg-slate-900 px-3 py-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
           {/* TIMEOUT OVERLAY */}
           {timeoutCountdown !== null && (
             <motion.div
@@ -739,17 +713,13 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
               animate={{ opacity: 1 }}
               className="absolute inset-0 bg-blue-600/95 backdrop-blur-md z-50 flex flex-col items-center justify-center"
             >
-              <div className="text-sm font-bold uppercase tracking-widest mb-2">
+              <div className="text-xs sm:text-sm font-bold uppercase tracking-widest mb-2">
                 {activeTimeoutTeam} Time-Out
               </div>
-              <div className="text-9xl font-mono font-black">{timeoutCountdown}</div>
+              <div className="font-mono font-black" style={{ fontSize: 'clamp(4rem,20vw,7rem)' }}>{timeoutCountdown}</div>
               <button
-                onClick={() => {
-                  setTimeoutCountdown(null);
-                  setActiveTimeoutTeam(null);
-                  setIsRunning(true);
-                }}
-                className="mt-8 px-6 py-2 bg-white/10 rounded-full text-xs hover:bg-white/20 transition-colors"
+                onClick={() => { setTimeoutCountdown(null); setActiveTimeoutTeam(null); setIsRunning(true); }}
+                className="mt-6 px-6 py-2 bg-white/10 rounded-full text-xs active:bg-white/20 touch-manipulation"
               >
                 Resume Match
               </button>
@@ -757,102 +727,79 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           )}
 
           {!isRunning && time > 0 && timeoutCountdown === null && (
-            <div className="absolute top-0 left-0 w-full bg-yellow-500/10 text-yellow-500 text-[10px] text-center font-bold uppercase tracking-widest py-1">
-              Match Paused - Scoring Disabled
+            <div className="absolute top-0 left-0 w-full bg-yellow-500/10 text-yellow-500 text-[9px] text-center font-bold uppercase tracking-widest py-1">
+              Paused — Scoring Disabled
             </div>
           )}
 
-          <div className="text-center pt-2">
-            <input 
-              className="bg-transparent text-xl font-bold text-center w-full focus:outline-none text-blue-400" 
-              value={teamAName} 
-              onChange={e => setTeamAName(e.target.value)} 
+          {/* Team A */}
+          <div className="text-center flex flex-col items-center justify-center">
+            <input
+              className="bg-transparent font-bold text-center w-full focus:outline-none text-blue-400 text-[11px] sm:text-base truncate px-1"
+              value={teamAName}
+              onChange={e => setTeamAName(e.target.value)}
             />
-            <div className="text-7xl font-black tabular-nums">{scoreA}</div>
-            <div className="flex justify-center gap-2 mt-2">
+            <div className="font-black tabular-nums leading-none my-1" style={{ fontSize: 'clamp(2.8rem,16vw,5.5rem)' }}>{scoreA}</div>
+            <div className="flex justify-center gap-1">
               {[...Array(2)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-8 h-3 rounded-full border border-blue-500/30 ${
-                    i < timeoutsUsedA.length ? 'bg-slate-800 shadow-inner' : 'bg-blue-500 shadow-lg shadow-blue-500/20'
-                  }`}
-                />
+                <div key={i} className={`w-5 h-2 sm:w-8 sm:h-3 rounded-full border border-blue-500/30 ${i < timeoutsUsedA.length ? 'bg-slate-800' : 'bg-blue-500'}`} />
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center border-x border-slate-800 pt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold text-slate-500 tracking-widest uppercase">
-                Half {currentHalf}
-              </span>
-              {isHalftimeReached && (
-                <span className="bg-yellow-500 text-slate-950 text-[10px] px-2 py-0.5 rounded font-black">
-                  HALFTIME
-                </span>
-              )}
-              {isMatchOver && (
-                <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-black">
-                  FULL TIME
-                </span>
-              )}
+          {/* Clock */}
+          <div className="flex flex-col items-center justify-center border-x border-slate-800 px-1">
+            <div className="flex flex-wrap items-center justify-center gap-1 mb-1">
+              <span className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase">H{currentHalf}</span>
+              {isHalftimeReached && <span className="bg-yellow-500 text-slate-950 text-[8px] px-1 py-0.5 rounded font-black">HT</span>}
+              {isMatchOver && <span className="bg-red-500 text-white text-[8px] px-1 py-0.5 rounded font-black">FT</span>}
             </div>
-
-            <div className={`text-5xl font-mono font-bold tabular-nums mb-4 transition-colors ${
+            <div className={`font-mono font-bold tabular-nums mb-2 transition-colors ${
               isRunning && timeoutCountdown === null ? 'text-white' :
-              (isMatchOver || isHalftimeReached) ? 'text-red-500' :
-              'text-yellow-500'
-            }`}>
+              (isMatchOver || isHalftimeReached) ? 'text-red-500' : 'text-yellow-500'
+            }`} style={{ fontSize: 'clamp(1.2rem,7vw,3rem)' }}>
               {formatTime(time)}
             </div>
-            <div className="flex gap-2">
-              <button 
+            <div className="flex gap-1.5">
+              <button
                 disabled={isMatchOver}
                 onClick={handleToggleTimer}
-                className={`p-3 rounded-full ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center touch-manipulation ${
                   isMatchOver ? 'bg-slate-800 cursor-not-allowed' :
-                  isRunning && timeoutCountdown === null ? 'bg-red-500' : 'bg-emerald-500'
+                  isRunning && timeoutCountdown === null ? 'bg-red-500 active:bg-red-600' : 'bg-emerald-500 active:bg-emerald-600'
                 } text-slate-950 shadow-lg`}
               >
-                {isRunning && timeoutCountdown === null ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+                {isRunning && timeoutCountdown === null ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
               </button>
-              <button 
+              <button
                 onClick={() => {
-                  if(confirm("Reset match?")) {
-                    setTime(0);
-                    setIsRunning(false);
-                    setActiveFouls([]);
-                    setMatchLog([]);
-                    const newPlayersA = generateRoster("A", 100);
-                    const newPlayersB = generateRoster("B", 200);
-                    setPlayersA(newPlayersA);
-                    setPlayersB(newPlayersB);
-                    setOnCourtA(newPlayersA.slice(0, 7).map(p => p.id));
-                    setOnCourtB(newPlayersB.slice(0, 7).map(p => p.id));
+                  if (confirm("Reset match?")) {
+                    setTime(0); setIsRunning(false); setActiveFouls([]); setMatchLog([]);
+                    const a = generateRoster("A", 100); const b = generateRoster("B", 200);
+                    setPlayersA(a); setPlayersB(b);
+                    setOnCourtA(a.slice(0, 7).map(p => p.id));
+                    setOnCourtB(b.slice(0, 7).map(p => p.id));
                   }
-                }} 
-                className="p-3 rounded-full bg-slate-800 hover:bg-slate-700"
+                }}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-800 active:bg-slate-700 touch-manipulation"
               >
-                <RotateCcw size={20} />
+                <RotateCcw size={16} />
               </button>
             </div>
+            <div className="mt-1 text-[9px] text-slate-500">{getTotalMatchTimeouts()}/3 T.O.</div>
           </div>
 
-          <div className="text-center pt-2">
-            <input 
-              className="bg-transparent text-xl font-bold text-center w-full focus:outline-none text-red-400" 
-              value={teamBName} 
-              onChange={e => setTeamBName(e.target.value)} 
+          {/* Team B */}
+          <div className="text-center flex flex-col items-center justify-center">
+            <input
+              className="bg-transparent font-bold text-center w-full focus:outline-none text-red-400 text-[11px] sm:text-base truncate px-1"
+              value={teamBName}
+              onChange={e => setTeamBName(e.target.value)}
             />
-            <div className="text-7xl font-black tabular-nums">{scoreB}</div>
-            <div className="flex justify-center gap-2 mt-2">
+            <div className="font-black tabular-nums leading-none my-1" style={{ fontSize: 'clamp(2.8rem,16vw,5.5rem)' }}>{scoreB}</div>
+            <div className="flex justify-center gap-1">
               {[...Array(2)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-8 h-3 rounded-full border border-red-500/30 ${
-                    i < timeoutsUsedB.length ? 'bg-slate-800 shadow-inner' : 'bg-red-500 shadow-lg shadow-red-500/20'
-                  }`}
-                />
+                <div key={i} className={`w-5 h-2 sm:w-8 sm:h-3 rounded-full border border-red-500/30 ${i < timeoutsUsedB.length ? 'bg-slate-800' : 'bg-red-500'}`} />
               ))}
             </div>
           </div>
