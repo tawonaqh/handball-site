@@ -11,8 +11,9 @@ class League extends Model
 
     protected $fillable = [
         'name', 'gender', 'tournament_id',
-        'type', 'season', 'description', 'max_teams',
+        'type', 'fixture_type', 'season', 'description', 'max_teams',
         'num_groups', 'teams_per_group', 'knockout_rounds',
+        'win_points', 'draw_points', 'loss_points',
     ];
 
     public function teams()

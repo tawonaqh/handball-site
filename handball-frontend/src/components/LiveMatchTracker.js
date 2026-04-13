@@ -198,13 +198,21 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
         playersA: playersA.map(p => ({
           playerId: p.id,
           goals: p.goals,
+          assists: p.assists || 0,
+          saves: p.saves || 0,
           suspensions: p.suspensions,
+          yellowCard: p.yellowCards > 0,
+          blueCard: p.isBlueCarded || false,
           redCard: p.isRedCarded
         })),
         playersB: playersB.map(p => ({
           playerId: p.id,
           goals: p.goals,
+          assists: p.assists || 0,
+          saves: p.saves || 0,
           suspensions: p.suspensions,
+          yellowCard: p.yellowCards > 0,
+          blueCard: p.isBlueCarded || false,
           redCard: p.isRedCarded
         })),
         matchLog,

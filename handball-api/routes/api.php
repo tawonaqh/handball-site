@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\RefereeController;
 use App\Http\Controllers\Api\LiveMatchController;
 use App\Http\Controllers\Api\ImageUploadController;
+use App\Http\Controllers\Api\BracketController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -119,5 +120,20 @@ Route::get('games/{id}/live', [LiveMatchController::class, 'getLiveMatch']);
 Route::get('games/{id}/init', [LiveMatchController::class, 'getMatchInitData']);
 Route::post('games/{id}/live-update', [LiveMatchController::class, 'updateLiveMatch']);
 Route::post('games/{id}/finalize', [LiveMatchController::class, 'finalizeMatch']);
+Route::put('games/{id}/score', [LiveMatchController::class, 'editScore']);          // Admin: edit + recalculate
+Route::post('games/{id}/manual-entry', [LiveMatchController::class, 'manualEntry']); // Admin: manual score entry
+Route::get('games/{id}/match-sheet', [LiveMatchController::class, 'getMatchSheet']); // Match sheet report
+
+// Standings & Rankings
 Route::get('leagues/{id}/standings', [LiveMatchController::class, 'getLeagueStandings']);
+Route::get('leagues/{id}/wildcard-table', [LiveMatchController::class, 'getWildcardTable']);
+Route::post('leagues/{id}/recalculate', [BracketController::class, 'recalculate']);
+
+// Fixture & Bracket Generation
+Route::post('leagues/{id}/generate-fixtures', [BracketController::class, 'generateFixtures']);
+Route::post('leagues/{id}/generate-bracket', [BracketController::class, 'generateBracket']);
+Route::get('leagues/{id}/bracket', [BracketController::class, 'getBracket']);
+Route::post('leagues/{id}/slot-wildcards', [BracketController::class, 'slotWildcards']);
+
+// Player Rankings
 Route::get('rankings/players', [LiveMatchController::class, 'getPlayerRankings']);

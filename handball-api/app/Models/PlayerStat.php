@@ -16,16 +16,26 @@ class PlayerStat extends Model
         'season_year',
         'games_played',
         'total_goals',
+        'total_assists',
+        'total_saves',
+        'save_rate',
         'total_suspensions',
-        'red_cards'
+        'red_cards',
+        'yellow_cards',
+        'blue_cards',
     ];
 
     protected $casts = [
-        'games_played' => 'integer',
-        'total_goals' => 'integer',
+        'games_played'      => 'integer',
+        'total_goals'       => 'integer',
+        'total_assists'     => 'integer',
+        'total_saves'       => 'integer',
+        'save_rate'         => 'float',
         'total_suspensions' => 'integer',
-        'red_cards' => 'integer',
-        'season_year' => 'integer'
+        'red_cards'         => 'integer',
+        'yellow_cards'      => 'integer',
+        'blue_cards'        => 'integer',
+        'season_year'       => 'integer',
     ];
 
     public function player()
