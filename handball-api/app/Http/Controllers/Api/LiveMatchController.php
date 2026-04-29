@@ -153,7 +153,9 @@ class LiveMatchController extends Controller
                 ['players' => $data['playersB'] ?? [], 'team_id' => $game->away_team_id],
             ] as $side) {
                 foreach ($side['players'] as $pd) {
-                    $player = Player::find($pd['playerId']);
+                    $playerId = (int) ($pd['playerId'] ?? 0);
+                    if (!$playerId) continue;
+                    $player = Player::query()->find($playerId);
                     if (!$player) continue;
 
                     $player->goals          += $pd['goals']   ?? 0;
