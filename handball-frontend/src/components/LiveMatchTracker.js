@@ -312,8 +312,13 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
 
   const isPlayerSuspended = (playerId) => activeFouls.some(f => f.playerId === playerId);
 
+  // A red-carded player is permanently off — cannot score, cannot be subbed in or out
+  const isPlayerPermanentlyOut = (player) => player.isRedCarded;
+
   const handleGoal = (team, playerId, delta) => {
     if (!isRunning || timeoutCountdown !== null) return;
+    // Only block scoring if actively serving a 2-min suspension
+    // Red-carded players are already blocked via isRedCarded check in canScore
     if (isPlayerSuspended(playerId)) return;
 
     const update = (players) => players.map(p => {
@@ -336,7 +341,6 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     if (team === 'A') setPlayersA(update);
     else setPlayersB(update);
     
-    // Instant save after goal
     setTimeout(() => saveMatchState(), 100);
   };
 
@@ -350,15 +354,12 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           team: team === 'A' ? teamAName : teamBName,
           type: 'YELLOW CARD'
         }, ...prev].slice(0, 10));
-
         return { ...p, yellowCards: p.yellowCards + 1 };
       }
       return p;
     });
-
     if (team === 'A') setPlayersA(update);
     else setPlayersB(update);
-    
     setTimeout(() => saveMatchState(), 100);
   };
 
@@ -374,7 +375,6 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           team: team === 'A' ? teamAName : teamBName,
           type: 'RED CARD'
         }, ...prev].slice(0, 10));
-
         return { ...p, isRedCarded: true };
       }
       return p;
@@ -383,16 +383,27 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     if (team === 'A') setPlayersA(update);
     else setPlayersB(update);
 
-    // Add 2-minute suspension
-    setActiveFouls(prev => [...prev, {
-      id: Date.now(),
-      playerId: player.id,
-      team,
-      playerName: player.name,
-      playerNumber: player.number,
-      remaining: 120,
-    }]);
-    
+    // Red card: stack onto existing 2-min or add fresh 2-min
+    setActiveFouls(prev => {
+      const existing = prev.find(f => f.playerId === player.id);
+      if (existing) {
+        // Add 120s to whatever time is remaining
+        return prev.map(f => f.playerId === player.id
+          ? { ...f, remaining: f.remaining + 120 }
+          : f
+        );
+      }
+      return [...prev, {
+        id: Date.now(),
+        playerId: player.id,
+        team,
+        playerName: player.name,
+        playerNumber: player.number,
+        remaining: 120,
+        permanent: true, // red card = permanent exclusion after serving
+      }];
+    });
+
     setTimeout(() => saveMatchState(), 100);
   };
 
@@ -408,7 +419,6 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           team: team === 'A' ? teamAName : teamBName,
           type: 'BLUE CARD'
         }, ...prev].slice(0, 10));
-
         return { ...p, isRedCarded: true, isBlueCarded: true };
       }
       return p;
@@ -417,36 +427,44 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     if (team === 'A') setPlayersA(update);
     else setPlayersB(update);
 
-    // Add 2-minute suspension
-    setActiveFouls(prev => [...prev, {
-      id: Date.now(),
-      playerId: player.id,
-      team,
-      playerName: player.name,
-      playerNumber: player.number,
-      remaining: 120,
-    }]);
-    
+    setActiveFouls(prev => {
+      const existing = prev.find(f => f.playerId === player.id);
+      if (existing) {
+        return prev.map(f => f.playerId === player.id
+          ? { ...f, remaining: f.remaining + 120, permanent: true }
+          : f
+        );
+      }
+      return [...prev, {
+        id: Date.now(),
+        playerId: player.id,
+        team,
+        playerName: player.name,
+        playerNumber: player.number,
+        remaining: 120,
+        permanent: true,
+      }];
+    });
+
     setTimeout(() => saveMatchState(), 100);
   };
 
   const addTwoMinFoul = (team, player) => {
     if (player.isRedCarded) return;
 
+    const newSuspensions = player.suspensions + 1;
+    const autoRedCard = newSuspensions >= 3;
+
     const update = (players) => players.map(p => {
       if (p.id === player.id) {
-        const newSuspensions = p.suspensions + 1;
-        const redCarded = newSuspensions >= 3;
-        
         setMatchLog(prev => [{
           id: generateUniqueId(),
           time: formatTime(time),
           player: p.name,
           team: team === 'A' ? teamAName : teamBName,
-          type: redCarded ? 'RED CARD' : '2 MIN FOUL'
+          type: autoRedCard ? 'RED CARD (3rd 2-min)' : '2 MIN FOUL'
         }, ...prev].slice(0, 10));
-
-        return { ...p, suspensions: newSuspensions, isRedCarded: redCarded };
+        return { ...p, suspensions: newSuspensions, isRedCarded: autoRedCard };
       }
       return p;
     });
@@ -454,20 +472,35 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     if (team === 'A') setPlayersA(update);
     else setPlayersB(update);
 
-    setActiveFouls(prev => [...prev, {
-      id: Date.now(),
-      playerId: player.id,
-      team,
-      playerName: player.name,
-      playerNumber: player.number,
-      remaining: 120,
-    }]);
-    
-    // Instant save after foul
+    // Stack onto existing suspension if one is already running, otherwise add fresh
+    setActiveFouls(prev => {
+      const existing = prev.find(f => f.playerId === player.id);
+      if (existing) {
+        // Add 120s on top of remaining time
+        return prev.map(f => f.playerId === player.id
+          ? { ...f, remaining: f.remaining + 120, permanent: f.permanent || autoRedCard }
+          : f
+        );
+      }
+      return [...prev, {
+        id: Date.now(),
+        playerId: player.id,
+        team,
+        playerName: player.name,
+        playerNumber: player.number,
+        remaining: 120,
+        permanent: autoRedCard,
+      }];
+    });
+
     setTimeout(() => saveMatchState(), 100);
   };
 
   const handleSubstitution = (team, playerOutId, playerInId) => {
+    // Never allow subbing out a red-carded player (they're permanently off)
+    const outPlayer = (team === 'A' ? playersA : playersB).find(p => p.id === playerOutId);
+    if (outPlayer?.isRedCarded) return;
+
     if (team === 'A') {
       setOnCourtA(prev => prev.map(id => id === playerOutId ? playerInId : id));
     } else {
@@ -475,8 +508,8 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
     }
     setSubmittingFor(null);
 
-    const pIn = (team === 'A' ? playersA : playersB).find(p => p.id === playerInId);
-    const pOut = (team === 'A' ? playersA : playersB).find(p => p.id === playerOutId);
+    const pIn  = (team === 'A' ? playersA : playersB).find(p => p.id === playerInId);
+    const pOut = outPlayer;
 
     setMatchLog(prev => [{
       id: generateUniqueId(),
@@ -485,19 +518,22 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
       team: team === 'A' ? teamAName : teamBName,
       type: 'SUB'
     }, ...prev].slice(0, 10));
-    
-    // Instant save after substitution
+
     setTimeout(() => saveMatchState(), 100);
   };
 
   const PlayerRow = ({ player, team, isOnCourt }) => {
     if (!player) return null;
     const suspended = isPlayerSuspended(player.id);
+    // On-court players who aren't red-carded and aren't serving a 2-min can score
+    // GK included — no position restriction
     const canScore = isRunning && !suspended && !player.isRedCarded && isOnCourt;
+    // Red card = permanently off, cannot be subbed out
+    const permanentlyOut = player.isRedCarded;
 
     return (
       <div className={`bg-slate-900 px-2 py-2 rounded-xl border transition-all ${
-        player.isRedCarded ? 'border-red-900 opacity-40' :
+        permanentlyOut ? 'border-red-900 opacity-40' :
         suspended ? 'border-yellow-700/50 bg-yellow-950/20' :
         'border-slate-800'
       }`}>
@@ -506,7 +542,7 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-slate-500 font-mono font-bold text-xs w-5 flex-shrink-0">#{player.number}</span>
             <div className="min-w-0">
-              <div className={`text-sm font-semibold truncate ${player.isRedCarded ? 'line-through' : ''}`}>
+              <div className={`text-sm font-semibold truncate ${permanentlyOut ? 'line-through' : ''}`}>
                 {player.name}
               </div>
               <div className="flex gap-0.5 items-center mt-0.5">
@@ -516,17 +552,22 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className={`w-1.5 h-1 rounded-full ${i < player.suspensions ? 'bg-yellow-500' : 'bg-slate-800'}`} />
                 ))}
-                {player.isRedCarded && <Ban size={9} className="text-red-500 ml-0.5" />}
+                {permanentlyOut && <Ban size={9} className="text-red-500 ml-0.5" />}
+                {suspended && !permanentlyOut && (
+                  <span className="text-[9px] text-yellow-500 font-bold ml-0.5">
+                    {formatTime(activeFouls.find(f => f.playerId === player.id)?.remaining ?? 0)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Goal counter */}
+          {/* Goal counter — available to all on-court non-red-carded players incl. GK */}
           <div className={`flex items-center bg-slate-950 rounded-lg px-0.5 gap-0.5 border flex-shrink-0 ${
             team === 'A' ? 'border-blue-500/20' : 'border-red-500/20'
           }`}>
             <button onClick={() => handleGoal(team, player.id, -1)}
-              disabled={!isRunning || player.goals === 0 || !isOnCourt}
+              disabled={!isRunning || player.goals === 0 || !isOnCourt || permanentlyOut}
               className="w-7 h-7 flex items-center justify-center text-slate-500 active:text-red-400 disabled:opacity-0 touch-manipulation">
               <Minus size={13}/>
             </button>
@@ -538,34 +579,39 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
               className="w-7 h-7 flex items-center justify-center active:text-emerald-400 disabled:text-slate-700 touch-manipulation">
               {!isRunning ? <Lock size={11} className="text-slate-600" /> :
                suspended ? <Timer size={13} className="text-yellow-500" /> :
+               permanentlyOut ? <Ban size={11} className="text-red-900" /> :
                <Plus size={13} className="text-emerald-500" />}
             </button>
           </div>
         </div>
 
-        {/* Row 2: discipline + sub — wraps on narrow screens */}
-        {isOnCourt && !player.isRedCarded && (
+        {/* Row 2: discipline + sub — only shown for active (non-red-carded) on-court players */}
+        {isOnCourt && !permanentlyOut && (
           <div className="flex items-center gap-1 flex-wrap">
             <button onClick={() => addYellowCard(team, player)}
               className="w-8 h-8 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 rounded-lg active:bg-yellow-500/40 touch-manipulation" title="Yellow Card">
               <div className="w-2 h-3 bg-yellow-500 rounded-sm"/>
             </button>
             <button onClick={() => addTwoMinFoul(team, player)}
-              className="w-8 h-8 flex items-center justify-center text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-lg active:bg-yellow-500/20 touch-manipulation" title="2-Min Suspension">
+              className="w-8 h-8 flex items-center justify-center text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-lg active:bg-yellow-500/20 touch-manipulation" title="2-Min (stacks if already suspended)">
               2'
             </button>
             <button onClick={() => addRedCard(team, player)}
-              className="w-8 h-8 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded-lg active:bg-red-600/40 touch-manipulation" title="Red Card">
+              className="w-8 h-8 flex items-center justify-center bg-red-600/20 border border-red-600/40 rounded-lg active:bg-red-600/40 touch-manipulation" title="Red Card — permanent exclusion">
               <div className="w-2 h-3 bg-red-600 rounded-sm"/>
             </button>
             <button onClick={() => addBlueCard(team, player)}
-              className="w-8 h-8 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded-lg active:bg-blue-600/40 touch-manipulation" title="Blue Card">
+              className="w-8 h-8 flex items-center justify-center bg-blue-600/20 border border-blue-600/40 rounded-lg active:bg-blue-600/40 touch-manipulation" title="Blue Card — permanent exclusion">
               <div className="w-2 h-3 bg-blue-600 rounded-sm"/>
             </button>
-            <button disabled={suspended}
+            {/* Sub button: disabled if serving 2-min OR permanently out */}
+            <button
+              disabled={suspended || permanentlyOut}
               onClick={() => setSubmittingFor({ team, playerId: player.id })}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 touch-manipulation ${suspended ? 'opacity-20 cursor-not-allowed' : 'active:bg-blue-600'}`}
-              title="Substitute">
+              className={`w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 touch-manipulation ${
+                suspended || permanentlyOut ? 'opacity-20 cursor-not-allowed' : 'active:bg-blue-600'
+              }`}
+              title={suspended ? "Cannot sub while serving 2-min" : permanentlyOut ? "Red-carded — cannot substitute" : "Substitute"}>
               <ArrowLeftRight size={13} />
             </button>
           </div>
@@ -846,14 +892,24 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {activeFouls.map(f => (
-                <div key={f.id} className="bg-slate-950 p-3 rounded-xl border-l-4 border-yellow-500 flex justify-between items-center">
+                <div key={f.id} className={`bg-slate-950 p-3 rounded-xl border-l-4 flex justify-between items-center ${
+                  f.permanent ? 'border-red-500' : 'border-yellow-500'
+                }`}>
                   <div>
                     <div className="text-[10px] text-slate-500">
-                      #{f.playerNumber} {f.team === 'A' ? teamAName : teamBName}
+                      #{f.playerNumber} · {f.team === 'A' ? teamAName : teamBName}
                     </div>
                     <div className="text-sm font-bold">{f.playerName}</div>
+                    <div className="text-[9px] mt-0.5">
+                      {f.permanent
+                        ? <span className="text-red-400 font-bold">RED CARD — serving then out</span>
+                        : <span className="text-yellow-500">2-min suspension</span>
+                      }
+                    </div>
                   </div>
-                  <div className={`text-xl font-mono ${isRunning ? 'text-yellow-500' : 'text-slate-600'}`}>
+                  <div className={`text-xl font-mono font-bold ${
+                    isRunning ? (f.permanent ? 'text-red-400' : 'text-yellow-500') : 'text-slate-600'
+                  }`}>
                     {formatTime(f.remaining)}
                   </div>
                 </div>
@@ -1001,24 +1057,37 @@ const LiveMatchTracker = ({ gameId, initialData }) => {
               <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                 {(submittingFor.team === 'A' ? playersA : playersB)
                   .filter(p => !(submittingFor.team === 'A' ? onCourtA : onCourtB).includes(p.id))
-                  .map(p => (
-                    <button
-                      key={p.id}
-                      disabled={p.isRedCarded}
-                      onClick={() => handleSubstitution(submittingFor.team, submittingFor.playerId, p.id)}
-                      className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                        p.isRedCarded 
-                          ? 'border-red-900 opacity-30 cursor-not-allowed' 
-                          : 'border-slate-800 hover:border-blue-500 hover:bg-blue-500/10'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="font-mono text-slate-500">#{p.number}</span>
-                        <span className="font-bold">{p.name}</span>
-                      </div>
-                      <UserPlus size={18} className="text-blue-400" />
-                    </button>
-                  ))}
+                  .map(p => {
+                    const blocked = p.isRedCarded || isPlayerSuspended(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        disabled={blocked}
+                        onClick={() => handleSubstitution(submittingFor.team, submittingFor.playerId, p.id)}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                          blocked
+                            ? 'border-red-900 opacity-30 cursor-not-allowed'
+                            : 'border-slate-800 hover:border-blue-500 hover:bg-blue-500/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="font-mono text-slate-500">#{p.number}</span>
+                          <div className="text-left">
+                            <span className="font-bold block">{p.name}</span>
+                            {p.isRedCarded && (
+                              <span className="text-[10px] text-red-500">Red card — cannot enter</span>
+                            )}
+                            {isPlayerSuspended(p.id) && !p.isRedCarded && (
+                              <span className="text-[10px] text-yellow-500">
+                                Serving 2-min — {formatTime(activeFouls.find(f => f.playerId === p.id)?.remaining ?? 0)} left
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {!blocked && <UserPlus size={18} className="text-blue-400" />}
+                      </button>
+                    );
+                  })}
               </div>
             </motion.div>
           </div>
