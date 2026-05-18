@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Timer, History, Ban, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Users, Timer, History, Ban, Wifi, WifiOff, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 
 const LiveMatchViewer = ({ gameId }) => {
   const [matchData, setMatchData] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Toggle full squad panels
+  const [showSquadA, setShowSquadA] = useState(false);
+  const [showSquadB, setShowSquadB] = useState(false);
 
   useEffect(() => {
     fetchMatchData();
@@ -158,26 +161,26 @@ const LiveMatchViewer = ({ gameId }) => {
         )}
 
         {/* HEADER SCOREBOARD */}
-        <div className="grid grid-cols-3 gap-4 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
-          <div className="text-center">
-            <div className="text-xl font-bold text-blue-400 mb-2">{matchData.teamAName}</div>
-            <div className="text-7xl font-black tabular-nums">{matchData.scoreA}</div>
+        <div className="scoreboard-grid bg-slate-900 px-3 py-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl">
+          <div className="text-center flex flex-col items-center justify-center">
+            <div className="text-blue-400 font-bold uppercase text-[10px] sm:text-xl mb-1 truncate max-w-full px-1">{matchData.teamAName}</div>
+            <div className="font-black tabular-nums" style={{ fontSize: 'clamp(2.8rem,16vw,5.5rem)' }}>{matchData.scoreA}</div>
           </div>
 
-          <div className="flex flex-col items-center justify-center border-x border-slate-800">
-            <div className={`text-5xl font-mono font-bold tabular-nums mb-2 transition-colors ${
+          <div className="flex flex-col items-center justify-center border-x border-slate-800 px-1">
+            <div className={`font-mono font-bold tabular-nums mb-1 transition-colors ${
               matchData.isRunning ? 'text-white' : 'text-slate-500'
-            }`}>
+            }`} style={{ fontSize: 'clamp(1.2rem,7vw,3rem)' }}>
               {formatTime(matchData.time)}
             </div>
-            <div className="text-xs text-slate-500 uppercase tracking-widest">
-              {matchData.isRunning ? 'In Progress' : 'Paused'}
+            <div className="text-[9px] text-slate-500 uppercase tracking-widest">
+              {matchData.isRunning ? 'Live' : 'Paused'}
             </div>
           </div>
 
-          <div className="text-center">
-            <div className="text-xl font-bold text-red-400 mb-2">{matchData.teamBName}</div>
-            <div className="text-7xl font-black tabular-nums">{matchData.scoreB}</div>
+          <div className="text-center flex flex-col items-center justify-center">
+            <div className="text-red-400 font-bold uppercase text-[10px] sm:text-xl mb-1 truncate max-w-full px-1">{matchData.teamBName}</div>
+            <div className="font-black tabular-nums" style={{ fontSize: 'clamp(2.8rem,16vw,5.5rem)' }}>{matchData.scoreB}</div>
           </div>
         </div>
 
@@ -272,31 +275,48 @@ const LiveMatchViewer = ({ gameId }) => {
           </div>
         </div>
 
-        {/* BENCH PLAYERS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Team A Bench */}
-          <div className="bg-slate-900/30 rounded-2xl p-4 border border-slate-800">
-            <h4 className="text-xs font-bold text-blue-400 uppercase mb-4">
-              {matchData.teamAName} - Bench
-            </h4>
-            <div className="grid gap-2">
-              {matchData.playersA
-                ?.filter(p => !matchData.onCourtA?.includes(p.id))
-                .map(player => <PlayerRow key={player.id} player={player} team="A" />)}
-            </div>
-          </div>
+        {/* FULL SQUAD — collapsible panels per team */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[
+            { team: 'A', name: matchData.teamAName, players: matchData.playersA, onCourt: matchData.onCourtA, show: showSquadA, setShow: setShowSquadA, color: 'text-blue-400', border: 'border-blue-500/30' },
+            { team: 'B', name: matchData.teamBName, players: matchData.playersB, onCourt: matchData.onCourtB, show: showSquadB, setShow: setShowSquadB, color: 'text-red-400', border: 'border-red-500/30' },
+          ].map(t => (
+            <div key={t.team} className="bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden">
+              {/* Header — always visible, tap to expand */}
+              <button
+                onClick={() => t.setShow(!t.show)}
+                className="w-full flex items-center justify-between px-4 py-3 touch-manipulation"
+              >
+                <span className={`font-bold text-sm flex items-center gap-2 ${t.color}`}>
+                  <Users size={15} />
+                  {t.name} — Full Squad ({t.players?.length ?? 0})
+                </span>
+                {t.show
+                  ? <ChevronUp size={16} className="text-slate-400" />
+                  : <ChevronDown size={16} className="text-slate-400" />}
+              </button>
 
-          {/* Team B Bench */}
-          <div className="bg-slate-900/30 rounded-2xl p-4 border border-slate-800">
-            <h4 className="text-xs font-bold text-red-400 uppercase mb-4">
-              {matchData.teamBName} - Bench
-            </h4>
-            <div className="grid gap-2">
-              {matchData.playersB
-                ?.filter(p => !matchData.onCourtB?.includes(p.id))
-                .map(player => <PlayerRow key={player.id} player={player} team="B" />)}
+              {t.show && (
+                <div className="px-3 pb-3 space-y-1.5 border-t border-slate-800">
+                  {/* On-court section */}
+                  <div className="pt-2 pb-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">On Court</span>
+                  </div>
+                  {t.players?.filter(p => t.onCourt?.includes(p.id)).map(player => (
+                    <PlayerRow key={player.id} player={player} team={t.team} />
+                  ))}
+
+                  {/* Bench section */}
+                  <div className="pt-2 pb-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bench</span>
+                  </div>
+                  {t.players?.filter(p => !t.onCourt?.includes(p.id)).map(player => (
+                    <PlayerRow key={player.id} player={player} team={t.team} />
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

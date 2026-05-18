@@ -11,8 +11,9 @@ class BracketService
     /**
      * Generate a round-robin fixture list for a league.
      * Supports single or double fixture (home/away).
+     * Pass $groupLabel (e.g. 'A') to stamp all games with that group.
      */
-    public function generateRoundRobin(League $league, array $teamIds, string $startDate): array
+    public function generateRoundRobin(League $league, array $teamIds, string $startDate, ?string $groupLabel = null): array
     {
         $isDouble  = ($league->fixture_type ?? 'single') === 'double';
         $games     = [];
@@ -42,6 +43,7 @@ class BracketService
                         'match_date'   => $date->copy()->addDays($round * 7)->toDateString(),
                         'round'        => $round + 1,
                         'leg'          => 1,
+                        'group_label'  => $groupLabel,
                         'status'       => 'scheduled',
                     ];
 
@@ -53,6 +55,7 @@ class BracketService
                             'match_date'   => $date->copy()->addDays(($rounds + $round) * 7)->toDateString(),
                             'round'        => $rounds + $round + 1,
                             'leg'          => 2,
+                            'group_label'  => $groupLabel,
                             'status'       => 'scheduled',
                         ];
                     }

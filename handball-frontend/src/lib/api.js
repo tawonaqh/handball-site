@@ -63,6 +63,20 @@ export async function getMatchSheet(gameId) {
     return fetcher(`games/${gameId}/match-sheet`);
 }
 
+export async function getGroupStandings(leagueId) {
+    return fetcher(`leagues/${leagueId}/group-standings`);
+}
+
+export async function generateGroupStage(leagueId, groups, startDate) {
+    const res = await fetch(`${API_URL}/leagues/${leagueId}/generate-group-stage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groups, start_date: startDate }),
+    });
+    if (!res.ok) throw new Error('Failed to generate group stage');
+    return res.json();
+}
+
 export async function getPlayerRankings(params = {}) {
     const query = new URLSearchParams(params).toString();
     return fetcher(`rankings/players${query ? '?' + query : ''}`);

@@ -132,9 +132,80 @@ class StandingsService
     }
 
     /**
-     * Build a virtual wildcard table from 3rd-place teams across groups.
-     * Ranks them by: Points > GD > Goals Scored.
+     * Get standings broken down by group, with qualification markers.
+     * Returns groups in alphabetical order, each with their sorted teams
+     * and a `qualifies` boolean based on league->qualify_spots.
      */
+    public function getGroupStandings(int $leagueId): array
+    {
+        $league       = League::with('teams')->findOrFail($leagueId);
+        $qualifySpots = $league->qualify_spots ?? 2;
+
+        // Get all distinct group labels from teams in this league
+        $groups = $league->teams
+            ->whereNotNull('group_label')
+            ->pluck('group_label')
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($groups->isEmpty()) {
+            // No groups defined — return single flat standings
+            return [
+                [
+                    'group'     => null,
+                    'standings' => $this->getStandings($leagueId)->map(function ($row, $i) use ($qualifySpots) {
+                        $row['qualifies'] = ($i + 1) <= $qualifySpots;
+                        return $row;
+                    })->values()->toArray(),
+                ]
+            ];
+        }
+
+        $result = [];
+
+        foreach ($groups as $groupLabel) {
+            // Teams in this group
+            $teamIds = $league->teams
+                ->where('group_label', $groupLabel)
+                ->pluck('id')
+                ->toArray();
+
+            // Get rankings only for these teams, sorted
+            $groupStandings = \App\Models\Ranking::with('team')
+                ->where('league_id', $leagueId)
+                ->whereIn('team_id', $teamIds)
+                ->orderBy('points', 'desc')
+                ->orderByRaw('(goals_for - goals_against) DESC')
+                ->orderBy('goals_for', 'desc')
+                ->get()
+                ->values()
+                ->map(function ($r, $i) use ($qualifySpots) {
+                    return [
+                        'rank'           => $i + 1,
+                        'team'           => ['id' => $r->team->id, 'name' => $r->team->name],
+                        'gamesPlayed'    => $r->played,
+                        'wins'           => $r->wins,
+                        'draws'          => $r->draws,
+                        'losses'         => $r->losses,
+                        'goalsFor'       => $r->goals_for,
+                        'goalsAgainst'   => $r->goals_against,
+                        'goalDifference' => $r->goals_for - $r->goals_against,
+                        'points'         => $r->points,
+                        // Top N teams qualify directly
+                        'qualifies'      => ($i + 1) <= $qualifySpots,
+                    ];
+                })
+                ->toArray();
+
+            $result[] = [
+                'group'     => $groupLabel,
+                'standings' => $groupStandings,
+            ];
+        }
+
+        return $result;
+    }
     public function getWildcardTable(int $leagueId, int $topN = 4): array
     {
         $standings = $this->getStandings($leagueId);

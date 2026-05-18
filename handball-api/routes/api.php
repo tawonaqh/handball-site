@@ -131,8 +131,10 @@ Route::post('leagues/{id}/recalculate', [BracketController::class, 'recalculate'
 
 // Fixture & Bracket Generation
 Route::post('leagues/{id}/generate-fixtures', [BracketController::class, 'generateFixtures']);
+Route::post('leagues/{id}/generate-group-stage', [BracketController::class, 'generateGroupStage']);
 Route::post('leagues/{id}/generate-bracket', [BracketController::class, 'generateBracket']);
 Route::get('leagues/{id}/bracket', [BracketController::class, 'getBracket']);
+Route::get('leagues/{id}/group-standings', [BracketController::class, 'getGroupStandings']);
 Route::post('leagues/{id}/slot-wildcards', [BracketController::class, 'slotWildcards']);
 
 // Player Rankings
