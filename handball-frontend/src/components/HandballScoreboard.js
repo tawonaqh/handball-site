@@ -266,15 +266,24 @@ const HandballScoreboard = () => {
     
     // Add 2-minute suspension for RED and BLUE cards
     if (type === '2MIN' || type === 'RED' || type === 'BLUE') {
-      setPenalties(prev => [...prev, {
-        id: Date.now(),
-        playerId: player.id,
-        team,
-        playerName: player.name,
-        playerNumber: player.number,
-        remaining: 120, // 2 minutes
-        type
-      }]);
+      setPenalties(prev => {
+        const existing = prev.find(p => p.playerId === player.id);
+        if (existing) {
+          return prev.map(p => p.playerId === player.id
+            ? { ...p, remaining: p.remaining + 120 }
+            : p
+          );
+        }
+        return [...prev, {
+          id: Date.now(),
+          playerId: player.id,
+          team,
+          playerName: player.name,
+          playerNumber: player.number,
+          remaining: 120,
+          type
+        }];
+      });
       
       if (type === '2MIN') {
         addLog("2MIN FOUL", teamName, `#${player.number} ${player.name}`, "2-minute suspension");

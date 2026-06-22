@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FaTrophy, FaUsers } from "react-icons/fa";
+import { FaTrophy, FaUsers, FaArrowRight } from "react-icons/fa";
 
 export default function TournamentStructure({ tournament, standings = [] }) {
   // Group teams by their groups for knockout tournaments
@@ -17,8 +17,28 @@ export default function TournamentStructure({ tournament, standings = [] }) {
     });
   }
 
-  // League type - show standings table
-  if (tournament.type === 'league' || tournament.type !== 'knockout') {
+  // Knockout only type - direct elimination, no standings or groups
+  if (tournament.type === 'knockout_only') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-8 text-white text-center"
+      >
+        <FaTrophy className="w-16 h-16 mx-auto mb-4 opacity-80" />
+        <h2 className="text-2xl font-bold mb-2">Direct Elimination Tournament</h2>
+        <p className="text-purple-100">
+          All teams enter a direct knockout bracket from the start
+          {tournament.knockout_rounds && (
+            <>, beginning with <span className="font-semibold capitalize">{tournament.knockout_rounds.replace(/_/g, ' ')}</span></>
+          )}
+        </p>
+      </motion.div>
+    );
+  }
+
+  // League type & League+Knockout - show standings table
+  if (tournament.type === 'league' || tournament.type === 'league_knockout') {
     if (standings.length === 0) {
       return (
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center border border-gray-100">
@@ -32,59 +52,90 @@ export default function TournamentStructure({ tournament, standings = [] }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100"
+        className="space-y-6"
       >
-        <div className="bg-gradient-to-r from-orange-500 to-yellow-400 p-6">
-          <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
-            <FaTrophy />
-            <span>League Standings</span>
-          </h2>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Pos</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Team</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">P</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">W</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">L</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Pts</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {standings.map((standing, index) => (
-                <tr key={standing.team.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      index === 0 ? 'bg-yellow-500 text-white' :
-                      index === 1 ? 'bg-gray-400 text-white' :
-                      index === 2 ? 'bg-orange-500 text-white' :
-                      'bg-gray-600 text-white'
-                    }`}>
-                      {standing.rank || index + 1}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-900">{standing.team.name}</div>
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-900">{standing.gamesPlayed || 0}</td>
-                  <td className="px-6 py-4 text-center text-green-600 font-semibold">{standing.wins || 0}</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-semibold">{standing.losses || 0}</td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-xl font-bold text-orange-600">{standing.points || 0}</span>
-                  </td>
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-orange-500 to-yellow-400 p-6">
+            <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
+              <FaTrophy />
+              <span>League Standings</span>
+            </h2>
+            {tournament.type === 'league_knockout' && tournament.qualify_spots && (
+              <p className="text-orange-100 mt-1 text-sm">
+                Top {tournament.qualify_spots} teams advance to knockout stage
+              </p>
+            )}
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Pos</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Team</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">P</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">W</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">L</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Pts</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {standings.map((standing, index) => (
+                  <tr key={standing.team.id} className={`hover:bg-gray-50 transition-colors ${
+                    tournament.type === 'league_knockout' && tournament.qualify_spots && index < tournament.qualify_spots
+                      ? 'bg-green-50'
+                      : ''
+                  }`}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                          index === 0 ? 'bg-yellow-500 text-white' :
+                          index === 1 ? 'bg-gray-400 text-white' :
+                          index === 2 ? 'bg-orange-500 text-white' :
+                          'bg-gray-600 text-white'
+                        }`}>
+                          {standing.rank || index + 1}
+                        </div>
+                        {tournament.type === 'league_knockout' && tournament.qualify_spots && index < tournament.qualify_spots && (
+                          <FaArrowRight className="text-green-500 text-xs" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-gray-900">{standing.team.name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center text-gray-900">{standing.gamesPlayed || 0}</td>
+                    <td className="px-6 py-4 text-center text-green-600 font-semibold">{standing.wins || 0}</td>
+                    <td className="px-6 py-4 text-center text-red-600 font-semibold">{standing.losses || 0}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-xl font-bold text-orange-600">{standing.points || 0}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {tournament.type === 'league_knockout' && tournament.knockout_rounds && (
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+            <h3 className="text-lg font-bold text-green-900 mb-2 flex items-center gap-2">
+              <FaTrophy className="text-green-600" />
+              Knockout Stage
+            </h3>
+            <p className="text-green-700">
+              Top {tournament.qualify_spots || 'qualified'} teams will compete in the{' '}
+              <span className="font-semibold capitalize">
+                {tournament.knockout_rounds.replace(/_/g, ' ')}
+              </span>
+            </p>
+          </div>
+        )}
       </motion.div>
     );
   }
 
-  // Knockout type - show groups
+  // Knockout type (groups + elimination) - show groups
   if (Object.keys(groupedTeams).length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8 text-center border border-gray-100">

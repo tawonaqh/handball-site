@@ -18,7 +18,8 @@ export default function CreateTournamentPage() {
     max_teams: "",
     num_groups: "",
     teams_per_group: "",
-    knockout_rounds: ""
+    knockout_rounds: "",
+    qualify_spots: ""
   });
 
   const handleChange = (e) => {
@@ -110,13 +111,16 @@ export default function CreateTournamentPage() {
               required
               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
-              <option value="league">League (Standings)</option>
-              <option value="knockout">Knockout (Groups + Elimination)</option>
+              <option value="league">League (Round Robin)</option>
+              <option value="knockout">Groups + Knockout</option>
+              <option value="knockout_only">Knockout Only (Direct Elimination)</option>
+              <option value="league_knockout">League + Knockout</option>
             </select>
             <p className="text-xs text-gray-400 mt-2">
-              {formData.type === 'league'
-                ? 'Teams compete in a round-robin format with standings based on points'
-                : 'Teams compete in groups, then advance to knockout rounds'}
+              {formData.type === 'league' && 'Teams compete in a round-robin format with standings based on points'}
+              {formData.type === 'knockout' && 'Teams are split into groups, then advance to knockout rounds'}
+              {formData.type === 'knockout_only' && 'All teams enter a direct elimination bracket from the start'}
+              {formData.type === 'league_knockout' && 'Teams play a full league, then top teams advance to knockout'}
             </p>
           </div>
 
@@ -131,8 +135,8 @@ export default function CreateTournamentPage() {
               required
               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
-              <option value="men">Men's</option>
-              <option value="women">Women's</option>
+               <option value="men">Men&apos;s</option>
+               <option value="women">Women&apos;s</option>
             </select>
             <p className="text-xs text-gray-400 mt-2">Which gender category this tournament is for</p>
           </div>
@@ -170,45 +174,69 @@ export default function CreateTournamentPage() {
           </div>
         </div>
 
-        {formData.type === 'knockout' && (
+        {(formData.type === 'knockout' || formData.type === 'knockout_only' || formData.type === 'league_knockout') && (
           <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6 space-y-6">
             <h3 className="text-lg font-semibold text-purple-300 flex items-center gap-2">
               <Trophy className="w-5 h-5" />
-              Knockout Configuration
+              {formData.type === 'knockout' && 'Groups & Knockout Configuration'}
+              {formData.type === 'knockout_only' && 'Knockout Configuration'}
+              {formData.type === 'league_knockout' && 'League & Knockout Configuration'}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Number of Groups
-                </label>
-                <input
-                  type="number"
-                  name="num_groups"
-                  value={formData.num_groups}
-                  onChange={handleChange}
-                  min="1"
-                  placeholder="e.g., 4"
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                />
-                <p className="text-xs text-gray-400 mt-1">Groups in group stage</p>
-              </div>
+              {formData.type === 'knockout' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Number of Groups
+                    </label>
+                    <input
+                      type="number"
+                      name="num_groups"
+                      value={formData.num_groups}
+                      onChange={handleChange}
+                      min="1"
+                      placeholder="e.g., 4"
+                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Groups in group stage</p>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Teams per Group
-                </label>
-                <input
-                  type="number"
-                  name="teams_per_group"
-                  value={formData.teams_per_group}
-                  onChange={handleChange}
-                  min="2"
-                  placeholder="e.g., 4"
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                />
-                <p className="text-xs text-gray-400 mt-1">Teams in each group</p>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Teams per Group
+                    </label>
+                    <input
+                      type="number"
+                      name="teams_per_group"
+                      value={formData.teams_per_group}
+                      onChange={handleChange}
+                      min="2"
+                      placeholder="e.g., 4"
+                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Teams in each group</p>
+                  </div>
+                </>
+              )}
+
+              {formData.type === 'league_knockout' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Teams Advancing to Knockout
+                  </label>
+                  <input
+                    type="number"
+                    name="qualify_spots"
+                    value={formData.qualify_spots}
+                    onChange={handleChange}
+                    min="2"
+                    placeholder="e.g., 8"
+                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Top N teams from league advance to knockout</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -230,7 +258,7 @@ export default function CreateTournamentPage() {
               </div>
             </div>
 
-            {formData.num_groups && formData.teams_per_group && (
+            {formData.type === 'knockout' && formData.num_groups && formData.teams_per_group && (
               <div className="bg-gray-700/30 rounded-lg p-4">
                 <p className="text-sm text-gray-300">
                   <span className="font-semibold text-purple-300">Total Teams:</span>{' '}

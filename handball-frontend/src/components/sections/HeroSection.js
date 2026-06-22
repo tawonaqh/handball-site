@@ -44,12 +44,32 @@ export default function HeroSection() {
     }
   ];
 
-  const stats = [
-    { number: "25+", label: "Active Leagues", icon: FaTrophy, delay: 0.2 },
-    { number: "150+", label: "Teams", icon: FaUsers, delay: 0.4 },
-    { number: "500+", label: "Players", icon: FaStar, delay: 0.6 },
-    { number: "1000+", label: "Matches", icon: FaCalendarAlt, delay: 0.8 }
-  ];
+  const [stats, setStats] = useState([
+    { number: "0", label: "Active Leagues", icon: FaTrophy, delay: 0.2 },
+    { number: "0", label: "Teams", icon: FaUsers, delay: 0.4 },
+    { number: "0", label: "Players", icon: FaStar, delay: 0.6 },
+    { number: "0", label: "Matches", icon: FaCalendarAlt, delay: 0.8 }
+  ]);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stats`);
+        if (res.ok) {
+          const data = await res.json();
+          setStats([
+            { number: data.active_leagues?.toString() || "0", label: "Active Leagues", icon: FaTrophy, delay: 0.2 },
+            { number: data.teams?.toString() || "0", label: "Teams", icon: FaUsers, delay: 0.4 },
+            { number: data.players?.toString() || "0", label: "Players", icon: FaStar, delay: 0.6 },
+            { number: data.matches?.toString() || "0", label: "Matches", icon: FaCalendarAlt, delay: 0.8 },
+          ]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
+      }
+    }
+    fetchStats();
+  }, []);
 
   return (
     <div className="relative w-full h-[600px] sm:h-[700px] md:h-[800px] overflow-hidden">

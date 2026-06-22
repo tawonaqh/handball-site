@@ -18,6 +18,7 @@ export default function CreatePlayerPage() {
     team_id: "",
     position: "",
     jersey_number: "",
+    birth_year: "",
     bio: "",
     goals: 0,
     assists: 0,
@@ -198,6 +199,22 @@ export default function CreatePlayerPage() {
               placeholder="e.g., 10"
               min="1"
               max="99"
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Birth Year
+            </label>
+            <input
+              type="number"
+              name="birth_year"
+              value={formData.birth_year}
+              onChange={handleChange}
+              placeholder="e.g., 2000"
+              min="1950"
+              max={new Date().getFullYear()}
               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             />
           </div>
