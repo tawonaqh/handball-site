@@ -46,7 +46,7 @@ const LeagueCard = ({ league, index }) => {
               <Eye className="w-4 h-4" />
             </button>
           </Link>
-          <Link href={`/admin/leagues/${league.id}/edit`}>
+          <Link href={`/admin/leagues/${league.id}`}>
             <button className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
               <Edit className="w-4 h-4" />
             </button>

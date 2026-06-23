@@ -11,15 +11,14 @@ export default function CreateTournamentPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    season: "",
+    season: new Date().getFullYear().toString(),
     gender: "men",
     type: "league",
-    max_teams: "",
-    num_groups: "",
-    teams_per_group: "",
+    max_teams: 16,
+    num_groups: 4,
+    teams_per_group: 4,
     knockout_rounds: "",
-    qualify_spots: ""
+    qualify_spots: 4,
   });
 
   const handleChange = (e) => {
@@ -42,8 +41,9 @@ export default function CreateTournamentPage() {
       });
 
       if (response.ok) {
-        alert("Tournament created successfully!");
-        router.push("/admin/leagues");
+        const league = await response.json();
+        alert("Tournament created successfully! Now add teams and manage in the detail view.");
+        router.push(`/admin/leagues/${league.id}`);
       } else {
         alert("Failed to create tournament");
       }
@@ -116,12 +116,6 @@ export default function CreateTournamentPage() {
               <option value="knockout_only">Knockout Only (Direct Elimination)</option>
               <option value="league_knockout">League + Knockout</option>
             </select>
-            <p className="text-xs text-gray-400 mt-2">
-              {formData.type === 'league' && 'Teams compete in a round-robin format with standings based on points'}
-              {formData.type === 'knockout' && 'Teams are split into groups, then advance to knockout rounds'}
-              {formData.type === 'knockout_only' && 'All teams enter a direct elimination bracket from the start'}
-              {formData.type === 'league_knockout' && 'Teams play a full league, then top teams advance to knockout'}
-            </p>
           </div>
 
           <div>
@@ -135,10 +129,9 @@ export default function CreateTournamentPage() {
               required
               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
-               <option value="men">Men&apos;s</option>
-               <option value="women">Women&apos;s</option>
+              <option value="men">Men&apos;s</option>
+              <option value="women">Women&apos;s</option>
             </select>
-            <p className="text-xs text-gray-400 mt-2">Which gender category this tournament is for</p>
           </div>
         </div>
 
@@ -156,7 +149,6 @@ export default function CreateTournamentPage() {
               placeholder="e.g., 16"
               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
-            <p className="text-xs text-gray-400 mt-1">Maximum number of teams allowed</p>
           </div>
 
           <div>
@@ -182,106 +174,48 @@ export default function CreateTournamentPage() {
               {formData.type === 'knockout_only' && 'Knockout Configuration'}
               {formData.type === 'league_knockout' && 'League & Knockout Configuration'}
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {formData.type === 'knockout' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Number of Groups
-                    </label>
-                    <input
-                      type="number"
-                      name="num_groups"
-                      value={formData.num_groups}
-                      onChange={handleChange}
-                      min="1"
-                      placeholder="e.g., 4"
-                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Groups in group stage</p>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Number of Groups</label>
+                    <input type="number" name="num_groups" value={formData.num_groups} onChange={handleChange} min="1" placeholder="e.g., 4"
+                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Teams per Group
-                    </label>
-                    <input
-                      type="number"
-                      name="teams_per_group"
-                      value={formData.teams_per_group}
-                      onChange={handleChange}
-                      min="2"
-                      placeholder="e.g., 4"
-                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Teams in each group</p>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Teams per Group</label>
+                    <input type="number" name="teams_per_group" value={formData.teams_per_group} onChange={handleChange} min="2" placeholder="e.g., 4"
+                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
                   </div>
                 </>
               )}
-
               {formData.type === 'league_knockout' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Teams Advancing to Knockout
-                  </label>
-                  <input
-                    type="number"
-                    name="qualify_spots"
-                    value={formData.qualify_spots}
-                    onChange={handleChange}
-                    min="2"
-                    placeholder="e.g., 8"
-                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Top N teams from league advance to knockout</p>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Teams Advancing to Knockout</label>
+                  <input type="number" name="qualify_spots" value={formData.qualify_spots} onChange={handleChange} min="2" placeholder="e.g., 8"
+                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
                 </div>
               )}
-
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Knockout Rounds
-                </label>
-                <select
-                  name="knockout_rounds"
-                  value={formData.knockout_rounds}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                >
+                <label className="block text-sm font-medium text-gray-300 mb-2">Knockout Rounds</label>
+                <select name="knockout_rounds" value={formData.knockout_rounds} onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50">
                   <option value="">Auto (based on teams)</option>
                   <option value="round_of_16">Round of 16</option>
                   <option value="quarter_finals">Quarter Finals (8 teams)</option>
                   <option value="semi_finals">Semi Finals (4 teams)</option>
                   <option value="finals">Finals Only (2 teams)</option>
                 </select>
-                <p className="text-xs text-gray-400 mt-1">Starting knockout stage</p>
               </div>
             </div>
-
-            {formData.type === 'knockout' && formData.num_groups && formData.teams_per_group && (
-              <div className="bg-gray-700/30 rounded-lg p-4">
-                <p className="text-sm text-gray-300">
-                  <span className="font-semibold text-purple-300">Total Teams:</span>{' '}
-                  {parseInt(formData.num_groups || 0) * parseInt(formData.teams_per_group || 0)} teams
-                  {' '}({formData.num_groups} groups × {formData.teams_per_group} teams)
-                </p>
-              </div>
-            )}
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows="4"
-            placeholder="Tournament description..."
-            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          />
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+          <p className="text-sm text-blue-300">
+            <strong>Next step:</strong> After creating, you will be taken to the management page where you can add teams, assign them to groups, generate fixtures, enter scores, and manage the full tournament.
+          </p>
         </div>
 
         <div className="flex gap-4 pt-4">

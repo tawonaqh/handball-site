@@ -18,6 +18,44 @@ class BracketController extends Controller
     ) {}
 
     /**
+     * Get league settings.
+     * GET /leagues/{id}/settings
+     */
+    public function getSettings($leagueId)
+    {
+        $league = League::findOrFail($leagueId);
+        return response()->json([
+            'match_duration'   => $league->match_duration ?? 60,
+            'overtime_halves'  => $league->overtime_halves ?? 2,
+            'shootout_enabled' => $league->shootout_enabled ?? 'yes',
+            'roster_limit'     => $league->roster_limit ?? 16,
+            'tiebreaker_order' => $league->tiebreaker_order ?? [
+                'Head-to-Head Points',
+                'Head-to-Head Goal Difference',
+                'Head-to-Head Goals Scored',
+                'Overall Goal Difference',
+                'Overall Goals Scored',
+                'Official Draw / Coin Toss',
+            ],
+            'knockout_method'  => $league->knockout_method ?? 'default',
+        ]);
+    }
+
+    /**
+     * Update league settings.
+     * PUT /leagues/{id}/settings
+     */
+    public function updateSettings(Request $request, $leagueId)
+    {
+        $league = League::findOrFail($leagueId);
+        $league->update($request->only([
+            'match_duration', 'overtime_halves', 'shootout_enabled',
+            'roster_limit', 'tiebreaker_order', 'knockout_method',
+        ]));
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Generate round-robin fixtures for a league (optionally for one group).
      * POST /leagues/{id}/generate-fixtures
      *
@@ -232,6 +270,134 @@ class BracketController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Generate a print-friendly rulebook for a league.
+     * GET /leagues/{id}/rulebook
+     */
+    public function rulebook($leagueId)
+    {
+        $league = League::with(['teams', 'tournament'])->findOrFail($leagueId);
+        $games  = Game::with(['homeTeam', 'awayTeam'])
+            ->where('league_id', $leagueId)
+            ->orderBy('match_date')
+            ->orderBy('round')
+            ->get();
+
+        $typeLabels = [
+            'league'          => 'League (Round Robin)',
+            'knockout'        => 'Groups + Knockout',
+            'knockout_only'   => 'Knockout Only (Direct Elimination)',
+            'league_knockout' => 'League + Knockout',
+        ];
+
+        $title       = htmlspecialchars($league->name);
+        $typeLabel   = htmlspecialchars($typeLabels[$league->type] ?? $league->type);
+        $gender      = htmlspecialchars(ucfirst($league->gender ?? 'men') . "'s");
+        $season      = htmlspecialchars($league->season ?? 'Current');
+        $desc        = htmlspecialchars($league->description ?? '');
+        $descBlock   = $desc ? "<p>{$desc}</p>" : '';
+
+        $settingsHtml = '<h3>Match Settings</h3><table><tr><th>Setting</th><th>Value</th></tr>';
+        $settingsHtml .= '<tr><td>Match Duration</td><td>' . ($league->match_duration ?? 60) . ' minutes</td></tr>';
+        $settingsHtml .= '<tr><td>Overtime</td><td>' . ($league->overtime_halves ?? 2) . ' halves</td></tr>';
+        $settingsHtml .= '<tr><td>Shootout</td><td>' . ucfirst($league->shootout_enabled ?? 'yes') . '</td></tr>';
+        $settingsHtml .= '<tr><td>Roster Limit</td><td>' . ($league->roster_limit ?? 16) . ' players</td></tr>';
+
+        if ($league->tiebreaker_order) {
+            $tiebreakers = is_array($league->tiebreaker_order)
+                ? $league->tiebreaker_order
+                : json_decode($league->tiebreaker_order, true);
+            if (is_array($tiebreakers)) {
+                $settingsHtml .= '<tr><td>Tiebreaker Order</td><td><ol style="margin:0;padding-left:18px">';
+                foreach ($tiebreakers as $tb) {
+                    $settingsHtml .= '<li>' . htmlspecialchars($tb) . '</li>';
+                }
+                $settingsHtml .= '</ol></td></tr>';
+            }
+        }
+        $settingsHtml .= '</table>';
+
+        $teamsHtml = '<h3>Registered Teams (' . $league->teams->count() . ')</h3>';
+        if ($league->teams->count() > 0) {
+            $teamsHtml .= '<table><tr><th>#</th><th>Team Name</th></tr>';
+            foreach ($league->teams as $i => $team) {
+                $teamsHtml .= '<tr><td>' . ($i + 1) . '</td><td>' . htmlspecialchars($team->name) . '</td></tr>';
+            }
+            $teamsHtml .= '</table>';
+        } else {
+            $teamsHtml .= '<p>No teams registered yet.</p>';
+        }
+
+        $configHtml = '<h3>Competition Format</h3>';
+        $configHtml .= '<table><tr><th>Config</th><th>Value</th></tr>';
+        $configHtml .= '<tr><td>Type</td><td>' . $typeLabel . '</td></tr>';
+        $configHtml .= '<tr><td>Gender</td><td>' . $gender . '</td></tr>';
+        $configHtml .= '<tr><td>Season</td><td>' . $season . '</td></tr>';
+        $configHtml .= '<tr><td>Max Teams</td><td>' . ($league->max_teams ?? 'N/A') . '</td></tr>';
+        if ($league->type === 'knockout') {
+            $configHtml .= '<tr><td>Groups</td><td>' . ($league->num_groups ?? 'N/A') . '</td></tr>';
+            $configHtml .= '<tr><td>Teams per Group</td><td>' . ($league->teams_per_group ?? 'N/A') . '</td></tr>';
+        }
+        if ($league->type === 'league_knockout') {
+            $configHtml .= '<tr><td>Teams to Knockout</td><td>' . ($league->qualify_spots ?? 'N/A') . '</td></tr>';
+        }
+        if ($league->knockout_rounds) {
+            $configHtml .= '<tr><td>Knockout Rounds</td><td>' . htmlspecialchars(str_replace('_', ' ', ucwords($league->knockout_rounds, '_'))) . '</td></tr>';
+        }
+        $configHtml .= '</table>';
+
+        $matchesHtml = '<h3>Match Schedule (' . $games->count() . ' matches)</h3>';
+        if ($games->count() > 0) {
+            $matchesHtml .= '<table><tr><th>Date</th><th>Home</th><th></th><th>Away</th><th>Round</th></tr>';
+            foreach ($games as $game) {
+                $home = $game->homeTeam ? htmlspecialchars($game->homeTeam->name) : 'TBD';
+                $away = $game->awayTeam ? htmlspecialchars($game->awayTeam->name) : 'TBD';
+                $date = $game->match_date ? date('d M Y', strtotime($game->match_date)) : 'TBD';
+                $round = $game->round ? htmlspecialchars($game->round) : '-';
+                $matchesHtml .= "<tr><td>{$date}</td><td>{$home}</td><td>vs</td><td>{$away}</td><td>{$round}</td></tr>";
+            }
+            $matchesHtml .= '</table>';
+        } else {
+            $matchesHtml .= '<p>No matches scheduled yet.</p>';
+        }
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{$title} - Rulebook</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #333; }
+  h1 { font-size: 28px; border-bottom: 3px solid #f97316; padding-bottom: 10px; }
+  h2 { font-size: 20px; color: #f97316; margin-top: 30px; }
+  h3 { font-size: 16px; color: #555; margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #f97316; color: white; }
+  tr:nth-child(even) { background: #f9f9f9; }
+  .header { text-align: center; margin-bottom: 30px; }
+  .header p { color: #666; }
+  @media print { body { margin: 0; padding: 15px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>{$title}</h1>
+  <p>Competition Rulebook &bull; {$gender} &bull; Season {$season}</p>
+  {$descBlock}
+</div>
+{$configHtml}
+{$settingsHtml}
+{$teamsHtml}
+{$matchesHtml}
+</body>
+</html>
+HTML;
+
+        return response($html, 200, ['Content-Type' => 'text/html']);
     }
 
     /**

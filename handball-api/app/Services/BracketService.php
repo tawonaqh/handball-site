@@ -77,17 +77,25 @@ class BracketService
      */
     public function generateKnockoutBracket(League $league, array $slots, string $startDate): array
     {
-        $n     = count($slots);
-        $round = (int) ceil(log($n, 2));
-        $total = (int) pow(2, $round);
+        $n = count($slots);
+
+        if ($league->knockout_rounds) {
+            $config      = $this->getKnockoutConfig($league->knockout_rounds);
+            $round       = $config['rounds'];
+            $total       = $config['size'];
+            $roundLabels = $config['labels'];
+        } else {
+            $round = (int) ceil(log($n, 2));
+            $total = (int) pow(2, $round);
+            $roundLabels = $this->getRoundLabels($round);
+        }
 
         // Pad with nulls (byes)
         while (count($slots) < $total) {
             $slots[] = null;
         }
 
-        $date        = Carbon::parse($startDate);
-        $roundLabels = $this->getRoundLabels($round);
+        $date = Carbon::parse($startDate);
         $createdGames = [];
         $currentRoundGames = [];
 
@@ -170,17 +178,19 @@ class BracketService
     }
 
     /**
-     * Slot wildcard qualifiers into quarter-final bracket avoiding group rematches.
+     * Slot wildcard qualifiers into the first knockout bracket round avoiding group rematches.
      */
     public function slotWildcards(League $league, array $wildcardTeamIds, array $groupWinners): void
     {
-        // Find QF games with empty slots
+        $prefix = $this->getFirstSlotPrefix($league);
+
+        // Find bracket games in the first knockout round with empty slots
         $qfGames = Game::where('league_id', $league->id)
-            ->where('bracket_slot', 'like', 'QF%')
+            ->where('bracket_slot', 'like', $prefix . '%')
             ->whereNull('away_team_id')
-            ->orWhere(function ($q) use ($league) {
+            ->orWhere(function ($q) use ($league, $prefix) {
                 $q->where('league_id', $league->id)
-                  ->where('bracket_slot', 'like', 'QF%')
+                  ->where('bracket_slot', 'like', $prefix . '%')
                   ->whereNull('home_team_id');
             })
             ->get();
@@ -227,5 +237,57 @@ class BracketService
     private function getByeTeamId(): ?int
     {
         return null; // Byes handled as null team slots
+    }
+
+    /**
+     * Get bracket configuration for a given knockout round setting.
+     * Returns ['rounds' => int, 'size' => int, 'labels' => array, 'firstSlotPrefix' => string].
+     */
+    private function getKnockoutConfig(string $knockoutRounds): array
+    {
+        return match ($knockoutRounds) {
+            'round_of_16'   => [
+                'rounds'           => 4,
+                'size'             => 16,
+                'labels'           => $this->getRoundLabels(4),
+                'firstSlotPrefix'  => 'R16',
+            ],
+            'quarter_finals' => [
+                'rounds'           => 3,
+                'size'             => 8,
+                'labels'           => $this->getRoundLabels(3),
+                'firstSlotPrefix'  => 'QF',
+            ],
+            'semi_finals'    => [
+                'rounds'           => 2,
+                'size'             => 4,
+                'labels'           => $this->getRoundLabels(2),
+                'firstSlotPrefix'  => 'SF',
+            ],
+            'finals'         => [
+                'rounds'           => 1,
+                'size'             => 2,
+                'labels'           => $this->getRoundLabels(1),
+                'firstSlotPrefix'  => 'F',
+            ],
+            default          => [
+                'rounds'           => 3,
+                'size'             => 8,
+                'labels'           => $this->getRoundLabels(3),
+                'firstSlotPrefix'  => 'QF',
+            ],
+        };
+    }
+
+    /**
+     * Get the first round slot prefix for a league's knockout config.
+     * Used by wildcard sloting and other bracket operations.
+     */
+    public function getFirstSlotPrefix(?League $league): string
+    {
+        if ($league && $league->knockout_rounds) {
+            return $this->getKnockoutConfig($league->knockout_rounds)['firstSlotPrefix'];
+        }
+        return 'QF'; // Default fallback
     }
 }
