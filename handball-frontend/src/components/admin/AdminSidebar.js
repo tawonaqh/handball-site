@@ -34,6 +34,7 @@ export default function AdminSidebar({ collapsed, setCollapsed, mobileOpen, setM
       title: "Overview",
       items: [
         { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+        { name: "Central Admin", href: "/admin/central", icon: Trophy },
       ]
     },
     {

@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handball 263 - Tournament & League</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: linear-gradient(135deg, #1a5f2c 0%, #d4a017 50%, #e03c1a 100%);
+      margin: 0;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0px, rgba(0, 0, 0, 0.05) 2px, transparent 2px, transparent 8px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      margin-bottom: 10px;
+      font-size: 2.2em;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #1a5f2c;
+      border-bottom: 3px solid #d4a017;
+      display: inline-block;
+      padding-bottom: 5px;
+    }
+
+    .panel {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      margin-bottom: 20px;
+    }
+
+    .flex {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      background: #e0e0e0;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1a5f2c, #0d3d1c);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #d4a017, #b8860b);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #e03c1a, #c62828);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+      color: white;
+    }
+
+    input,
+    select {
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #d4a017;
+    }
+
+    .category-toggle {
+      background: #f0f0f0;
+      border-radius: 50px;
+      display: inline-flex;
+      padding: 5px;
+      margin-bottom: 20px;
+    }
+
+    .cat-btn {
+      padding: 8px 25px;
+      border-radius: 40px;
+      background: transparent;
+      color: #555;
+      margin: 0;
+    }
+
+    .cat-btn.active {
+      background: #1a5f2c;
+      color: white;
+    }
+
+    .info {
+      background: #e8f5e9;
+      color: #1a5f2c;
+      padding: 10px;
+      border-radius: 8px;
+      border-left: 4px solid #1a5f2c;
+      font-size: 12px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .team-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .team-item {
+      padding: 12px;
+      margin: 8px 0;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 3px solid #1a5f2c;
+    }
+
+    .matches-table-wrapper {
+      overflow-x: auto;
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    th {
+      background: linear-gradient(135deg, #1a5f2c, #0d3d1c);
+      color: white;
+    }
+
+    .score-input-group {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .score-input-group input {
+      width: 70px;
+      text-align: center;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+    }
+
+    .status-completed {
+      background: #d4edda;
+      color: #1a5f2c;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #d4a017;
+    }
+
+    .btn-save,
+    .btn-edit {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .standings-container {
+      display: grid;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .standings-card {
+      background: #f8f9fa;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .standings-header {
+      background: linear-gradient(135deg, #1a5f2c, #d4a017);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .qualified-row {
+      background: #d4edda;
+      font-weight: 600;
+    }
+
+    .champion-row {
+      background: #ffd700;
+    }
+
+    .knockout-bracket {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 166px;
+      border-radius: 16px;
+    }
+
+    .bracket-round {
+      min-width: 280px;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      border-top: 4px solid #d4a017;
+    }
+
+    .bracket-match {
+      background: #f8f9fa;
+      padding: 15px;
+      margin: 12px 0;
+      border-radius: 10px;
+      border-left: 4px solid #1a5f2c;
+      position: relative;
+    }
+
+    .match-label {
+      position: absolute;
+      top: -10px;
+      left: 10px;
+      background: linear-gradient(135deg, #1a5f2c, #d4a017);
+      color: white;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.7em;
+    }
+
+    .round-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 25px;
+      font-size: 0.85em;
+      font-weight: bold;
+    }
+
+    .winner-line {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #ddd;
+      color: #1a5f2c;
+      font-weight: bold;
+    }
+
+    .alert,
+    .success,
+    .warning {
+      padding: 14px 20px;
+      border-radius: 12px;
+      margin: 10px 0;
+      display: none;
+      animation: slideDown 0.3s;
+    }
+
+    .alert {
+      background: #e03c1a;
+      color: white;
+    }
+
+    .success {
+      background: #1a5f2c;
+      color: white;
+    }
+
+    .warning {
+      background: #d4a017;
+      color: white;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .pdf-export {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Handball 263</h1>
+    <div class="subtitle">Full Knockout Support – Score Input & Progression</div>
+
+    <div id="alert" class="alert"></div>
+    <div id="success" class="success"></div>
+    <div id="warning" class="warning"></div>
+
+    <div id="dashboardView">
+      <div class="panel">
+        <div class="flex">
+          <h2>Tournament Dashboard</h2>
+          <button id="createTournamentBtn" class="btn-success" style="margin-left: auto;">+ New Tournament</button>
+        </div>
+        <div id="tournamentsList" class="dashboard-grid" style="display: grid; gap: 15px;"></div>
+      </div>
+    </div>
+
+    <div id="tournamentView" style="display: none;">
+      <div class="flex">
+        <button id="backToDashboardBtn" class="btn-secondary">← Back to Dashboard</button>
+        <h2 id="tournamentTitle" style="margin-left: 20px;"></h2>
+      </div>
+
+      <div class="panel">
+        <div class="flex" style="justify-content: center;">
+          <div class="category-toggle">
+            <button id="catLadiesBtn" class="cat-btn active" onclick="setActiveDivision('Ladies')">Ladies</button>
+            <button id="catGentsBtn" class="cat-btn" onclick="setActiveDivision('Gents')">Gents</button>
+          </div>
+        </div>
+
+        <div class="flex">
+          <label>Competition Name:</label>
+          <input type="text" id="tournamentName" placeholder="Tournament name" style="flex:2">
+          <label>Start Date:</label>
+          <input type="date" id="startDate">
+          <label>Venue:</label>
+          <input type="text" id="venue" placeholder="Venue">
+        </div>
+
+        <div id="divisionSettings" style="background:#f8f9fa; padding:15px; border-radius:12px; margin:15px 0;">
+          <div class="flex">
+            <label>Format:</label>
+            <select id="divisionFormat">
+              <option value="tournament">Tournament (Groups + Knockout)</option>
+              <option value="league">League (Round Robin)</option>
+            </select>
+          </div>
+          <div id="tournamentSettings" style="display:none;">
+            <div class="flex">
+              <label>Groups:</label>
+              <input type="range" id="groupCount" min="1" max="6" value="3" step="1" style="flex:2">
+              <span id="groupCountValue"
+                style="background:#1a5f2c; color:white; padding:4px 12px; border-radius:20px;">3</span>
+            </div>
+          </div>
+          <div id="leagueSettings" style="display:none;">
+            <div class="flex">
+              <label><input type="checkbox" id="homeAwayToggle"> Home & Away (double round-robin)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex">
+          <input type="text" id="teamNameInput" placeholder="Team name" style="flex:1">
+          <select id="groupSelect" style="flex:1"></select>
+          <button onclick="addTeam()" class="btn-success">Add Team</button>
+        </div>
+
+        <div class="info" id="formatInfo"></div>
+
+        <div class="flex">
+          <button onclick="generateFixtures()" class="btn-primary">Generate Fixtures</button>
+          <button onclick="determineQualifiers()" class="btn-secondary" id="qualifyBtn">Determine Qualifiers</button>
+          <button onclick="resetDivision()" class="btn-danger">Reset Division</button>
+          <button onclick="exportToPDF()" class="btn-secondary">Export PDF</button>
+        </div>
+
+        <h3>Teams (<span id="teamCount">0</span>)</h3>
+        <div id="teamList" class="team-list"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="matchesTitle">Fixtures & Results</h2>
+        <div id="groupTabs" style="margin-bottom: 15px;"></div>
+        <div id="matchesContainer"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Standings</h2>
+        <div id="standingsContainer" class="standings-container"></div>
+      </div>
+
+      <div class="panel" style="display: none;" id="qualifiersPanel">
+        <h2>Qualified Teams</h2>
+        <div id="qualifiersInfo"></div>
+        <div class="flex"><button onclick="generateKnockoutBracket()" class="btn-primary">Generate Knockout
+            Bracket</button></div>
+      </div>
+
+      <div class="panel" id="knockoutPanel">
+        <h2>Knockout Stage</h2>
+        <div id="knockoutContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfExport" class="pdf-export" style="padding:30px; font-family:Arial;">
+    <div style="text-align:center;">
+      <h1 style="color:#1a5f2c;">Handball 263 Report</h1>
+      <p id="pdfDate"></p>
+    </div>
+    <div id="pdfContent"></div>
+  </div>
+
+  <script>
+    // --------------------------- GLOBAL STATE ---------------------------
+    let tournaments = [];
+    let currentTournament = null;
+    let currentDiv = "Ladies";
+
+    function curDiv() { return currentTournament?.divisions[currentDiv]; }
+
+    function persistTournaments() { localStorage.setItem('handball263_tournaments', JSON.stringify(tournaments)); }
+
+    function loadTournaments() {
+      const stored = localStorage.getItem('handball263_tournaments');
+      if (stored) {
+        tournaments = JSON.parse(stored);
+      } else {
+        tournaments = [createDefaultTournament()];
+        persistTournaments();
+      }
+    }
+
+    function createDefaultTournament() {
+      return {
+        id: Date.now(),
+        name: "New Tournament",
+        startDate: new Date().toISOString().slice(0, 10),
+        venue: "TBD",
+        divisions: {
+          Ladies: { format: "tournament", groupCount: 3, homeAway: false, teams: [], matches: [], knockoutRounds: [], qualifiedTeams: null, nextId: 1 },
+          Gents: { format: "league", groupCount: 3, homeAway: false, teams: [], matches: [], knockoutRounds: [], qualifiedTeams: null, nextId: 1 }
+        }
+      };
+    }
+
+    function setCurrentTournament(tournament) {
+      currentTournament = tournament;
+      document.getElementById('dashboardView').style.display = 'none';
+      document.getElementById('tournamentView').style.display = 'block';
+      document.getElementById('tournamentTitle').innerText = currentTournament.name;
+      document.getElementById('tournamentName').value = currentTournament.name;
+      document.getElementById('startDate').value = currentTournament.startDate || '';
+      document.getElementById('venue').value = currentTournament.venue || '';
+      applyDivisionSettingsToUI();
+      renderAll();
+    }
+
+    function saveCurrentTournament() {
+      if (currentTournament) {
+        currentTournament.name = document.getElementById('tournamentName').value;
+        currentTournament.startDate = document.getElementById('startDate').value;
+        currentTournament.venue = document.getElementById('venue').value;
+        const index = tournaments.findIndex(t => t.id === currentTournament.id);
+        if (index !== -1) tournaments[index] = currentTournament;
+        persistTournaments();
+      }
+    }
+
+    function applyDivisionSettingsToUI() {
+      const div = curDiv();
+      if (!div) return;
+      document.getElementById('divisionFormat').value = div.format;
+      document.getElementById('groupCount').value = div.groupCount;
+      document.getElementById('groupCountValue').innerText = div.groupCount;
+      document.getElementById('homeAwayToggle').checked = div.homeAway;
+      toggleFormatUI(div.format);
+      updateGroupSelect();
+      updateFormatInfo();
+    }
+
+    function toggleFormatUI(format) {
+      const tournamentSettings = document.getElementById('tournamentSettings');
+      const leagueSettings = document.getElementById('leagueSettings');
+      if (format === 'tournament') {
+        tournamentSettings.style.display = 'block';
+        leagueSettings.style.display = 'none';
+        document.getElementById('qualifyBtn').style.display = 'inline-block';
+      } else {
+        tournamentSettings.style.display = 'none';
+        leagueSettings.style.display = 'block';
+        document.getElementById('qualifyBtn').style.display = 'none';
+      }
+    }
+
+    function updateFormatInfo() {
+      const div = curDiv();
+      if (!div) return;
+      const infoDiv = document.getElementById('formatInfo');
+      if (div.format === 'tournament') {
+        const gc = div.groupCount;
+        if (gc === 1) infoDiv.innerHTML = '<strong>Single Group:</strong> Round-robin, champion from standings.';
+        else if (gc === 2) infoDiv.innerHTML = '<strong>2 Groups:</strong> Top 2 each -> Semifinals.';
+        else if (gc === 3) infoDiv.innerHTML = '<strong>3 Groups:</strong> Top 2 each + Best 2 third -> Quarterfinals.';
+        else if (gc === 4) infoDiv.innerHTML = '<strong>4 Groups:</strong> Top 2 each -> Quarterfinals.';
+        else infoDiv.innerHTML = `<strong>${gc} Groups:</strong> Winners+RU+Best third = 16 teams -> Round of 16.`;
+        infoDiv.style.display = 'block';
+      } else {
+        infoDiv.innerHTML = `<strong>League Format:</strong> ${div.homeAway ? 'Double round-robin (home & away)' : 'Single round-robin'}.`;
+        infoDiv.style.display = 'block';
+      }
+    }
+
+    function updateGroupSelect() {
+      const groups = getGroups();
+      const select = document.getElementById('groupSelect');
+      select.innerHTML = '';
+      groups.forEach(g => { select.innerHTML += `<option value="${g}">${groups.length === 1 ? 'Single Group' : 'Pool ' + g}</option>`; });
+    }
+
+    function getGroups() {
+      const div = curDiv();
+      if (!div || div.format !== 'tournament') return [];
+      const count = div.groupCount;
+      if (count === 1) return ['A'];
+      return Array.from({ length: count }, (_, i) => String.fromCharCode(65 + i));
+    }
+
+    // Event listeners
+    document.getElementById('divisionFormat').addEventListener('change', (e) => {
+      const div = curDiv();
+      div.format = e.target.value;
+      if (div.format === 'tournament') { div.homeAway = false; if (!div.groupCount) div.groupCount = 3; }
+      else { div.groupCount = 3; }
+      div.matches = []; div.knockoutRounds = []; div.qualifiedTeams = null;
+      saveCurrentTournament();
+      applyDivisionSettingsToUI();
+      renderAll();
+    });
+    document.getElementById('groupCount').addEventListener('input', function () {
+      curDiv().groupCount = parseInt(this.value);
+      document.getElementById('groupCountValue').innerText = this.value;
+      saveCurrentTournament();
+      updateGroupSelect();
+      renderAll();
+    });
+    document.getElementById('homeAwayToggle').addEventListener('change', (e) => {
+      curDiv().homeAway = e.target.checked;
+      saveCurrentTournament();
+      renderAll();
+    });
+    document.getElementById('tournamentName').addEventListener('change', saveCurrentTournament);
+    document.getElementById('startDate').addEventListener('change', saveCurrentTournament);
+    document.getElementById('venue').addEventListener('change', saveCurrentTournament);
+
+    function setActiveDivision(division) {
+      currentDiv = division;
+      document.getElementById('catLadiesBtn').classList.toggle('active', division === 'Ladies');
+      document.getElementById('catGentsBtn').classList.toggle('active', division === 'Gents');
+      applyDivisionSettingsToUI();
+      renderAll();
+    }
+
+    // Dashboard
+    function renderDashboard() {
+      const container = document.getElementById('tournamentsList');
+      if (tournaments.length === 0) { container.innerHTML = '<div style="padding:15px; background:white; border-radius:12px;">No tournaments. Click "New Tournament" to start.</div>'; return; }
+      container.innerHTML = tournaments.map(t => `
+    <div class="tournament-card" style="background:#f8f9fa; border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+      <div><strong>${escapeHtml(t.name)}</strong><br><small>${t.startDate || 'TBD'} | ${t.venue || 'TBD'}</small></div>
+      <div><button class="btn-primary" onclick="selectTournament(${t.id})">Open</button><button class="btn-danger" style="margin-left: 5px;" onclick="deleteTournament(${t.id})">Delete</button></div>
+    </div>
+  `).join('');
+    }
+
+    function selectTournament(id) { const t = tournaments.find(t => t.id === id); if (t) setCurrentTournament(t); }
+    function deleteTournament(id) {
+      if (confirm('Permanently delete this tournament?')) {
+        tournaments = tournaments.filter(t => t.id !== id);
+        persistTournaments();
+        if (currentTournament && currentTournament.id === id) { document.getElementById('dashboardView').style.display = 'block'; document.getElementById('tournamentView').style.display = 'none'; currentTournament = null; }
+        renderDashboard();
+        showMessage('Tournament deleted', 'success');
+      }
+    }
+    function createNewTournament() {
+      const newTour = createDefaultTournament();
+      newTour.name = `Tournament ${tournaments.length + 1}`;
+      tournaments.push(newTour);
+      persistTournaments();
+      renderDashboard();
+      selectTournament(newTour.id);
+    }
+    function backToDashboard() {
+      document.getElementById('dashboardView').style.display = 'block';
+      document.getElementById('tournamentView').style.display = 'none';
+      currentTournament = null;
+      renderDashboard();
+    }
+    function showMessage(msg, type) { const el = document.getElementById(type); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function (m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+
+    // Team management
+    function addTeam() {
+      const div = curDiv();
+      if (!div) return;
+      const name = document.getElementById('teamNameInput').value.trim();
+      const group = document.getElementById('groupSelect').value || 'League';
+      if (!name) { showMessage('Enter team name', 'alert'); return; }
+      if (div.teams.some(t => t.name.toLowerCase() === name.toLowerCase())) { showMessage('Team exists', 'alert'); return; }
+      div.teams.push({ id: div.nextId++, name, group, played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, gd: 0, points: 0 });
+      saveCurrentTournament();
+      renderAll();
+      document.getElementById('teamNameInput').value = '';
+      showMessage(`Team "${name}" added to ${currentDiv}`, 'success');
+    }
+    function deleteTeam(id) {
+      if (!confirm('Delete team?')) return;
+      const div = curDiv();
+      div.teams = div.teams.filter(t => t.id !== id);
+      div.matches = div.matches.filter(m => div.teams.some(t => t.id === m.teamAId) && div.teams.some(t => t.id === m.teamBId));
+      div.knockoutRounds = []; div.qualifiedTeams = null;
+      saveCurrentTournament();
+      renderAll();
+      showMessage('Team deleted', 'success');
+    }
+
+    function generateFixtures() {
+      const div = curDiv();
+      if (!div || div.teams.length === 0) { showMessage('No teams', 'alert'); return; }
+      div.matches = [];
+      if (div.format === 'tournament') {
+        const groups = getGroups();
+        groups.forEach(group => {
+          const groupTeams = div.teams.filter(t => t.group === group);
+          for (let i = 0; i < groupTeams.length; i++) {
+            for (let j = i + 1; j < groupTeams.length; j++) {
+              div.matches.push({ id: Date.now() + Math.random() + i + j, teamAId: groupTeams[i].id, teamBId: groupTeams[j].id, scoreA: null, scoreB: null, group, played: false, leg: 1 });
+            }
+          }
+        });
+      } else {
+        const homeAway = div.homeAway;
+        for (let i = 0; i < div.teams.length; i++) {
+          for (let j = i + 1; j < div.teams.length; j++) {
+            div.matches.push({ id: Date.now() + Math.random() + i + j, teamAId: div.teams[i].id, teamBId: div.teams[j].id, scoreA: null, scoreB: null, group: 'League', played: false, leg: 1 });
+            if (homeAway) div.matches.push({ id: Date.now() + Math.random() + i + j + 1000, teamAId: div.teams[j].id, teamBId: div.teams[i].id, scoreA: null, scoreB: null, group: 'League', played: false, leg: 2 });
+          }
+        }
+      }
+      div.knockoutRounds = []; div.qualifiedTeams = null;
+      saveCurrentTournament();
+      renderAll();
+      showMessage(`Generated ${div.matches.length} matches`, 'success');
+    }
+
+    function updateMatch(idx) {
+      const div = curDiv();
+      const match = div.matches[idx];
+      const scoreA = parseInt(document.getElementById(`scoreA_${idx}`).value);
+      const scoreB = parseInt(document.getElementById(`scoreB_${idx}`).value);
+      if (isNaN(scoreA) || isNaN(scoreB)) { showMessage('Enter valid scores', 'alert'); return; }
+      if (match.played) { showMessage('Already recorded, use Edit', 'warning'); return; }
+      const teamA = div.teams.find(t => t.id === match.teamAId);
+      const teamB = div.teams.find(t => t.id === match.teamBId);
+      match.scoreA = scoreA; match.scoreB = scoreB; match.played = true;
+      teamA.played++; teamB.played++;
+      teamA.goalsFor += scoreA; teamA.goalsAgainst += scoreB;
+      teamB.goalsFor += scoreB; teamB.goalsAgainst += scoreA;
+      teamA.gd += (scoreA - scoreB); teamB.gd += (scoreB - scoreA);
+      if (scoreA > scoreB) { teamA.wins++; teamA.points += 2; teamB.losses++; }
+      else if (scoreB > scoreA) { teamB.wins++; teamB.points += 2; teamA.losses++; }
+      else { teamA.draws++; teamB.draws++; teamA.points += 1; teamB.points += 1; }
+      div.qualifiedTeams = null; div.knockoutRounds = [];
+      saveCurrentTournament();
+      renderAll();
+      showMessage(`${teamA.name} ${scoreA}-${scoreB} ${teamB.name}`, 'success');
+    }
+
+    function editMatch(idx) {
+      const div = curDiv();
+      const match = div.matches[idx];
+      if (!match.played) { showMessage('Match not played', 'warning'); return; }
+      const teamA = div.teams.find(t => t.id === match.teamAId);
+      const teamB = div.teams.find(t => t.id === match.teamBId);
+      teamA.played--; teamB.played--;
+      teamA.goalsFor -= match.scoreA; teamA.goalsAgainst -= match.scoreB;
+      teamB.goalsFor -= match.scoreB; teamB.goalsAgainst -= match.scoreA;
+      teamA.gd -= (match.scoreA - match.scoreB); teamB.gd -= (match.scoreB - match.scoreA);
+      if (match.scoreA > match.scoreB) { teamA.wins--; teamA.points -= 2; teamB.losses--; }
+      else if (match.scoreB > match.scoreA) { teamB.wins--; teamB.points -= 2; teamA.losses--; }
+      else { teamA.draws--; teamB.draws--; teamA.points -= 1; teamB.points -= 1; }
+      match.scoreA = null; match.scoreB = null; match.played = false;
+      div.qualifiedTeams = null; div.knockoutRounds = [];
+      saveCurrentTournament();
+      renderAll();
+      showMessage('Match editable', 'success');
+    }
+
+    function calculateStandings(teamList) { return [...teamList].sort((a, b) => b.points !== a.points ? b.points - a.points : (b.gd !== a.gd ? b.gd - a.gd : (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst))); }
+
+    function determineQualifiers() {
+      const div = curDiv();
+      if (div.format !== 'tournament') { showMessage('Only tournament mode has qualifiers', 'info'); return; }
+      const groupCount = div.groupCount, groups = getGroups();
+      if (groupCount === 1) { showMessage('Single group: champion from standings', 'info'); return; }
+      let allQualifiers = [];
+      if (groupCount === 2) {
+        groups.forEach(g => { const s = calculateStandings(div.teams.filter(t => t.group === g)); if (s[0]) allQualifiers.push(s[0]); if (s[1]) allQualifiers.push(s[1]); });
+        div.qualifiedTeams = { allQualifiers, format: 'two_groups' };
+      } else if (groupCount === 3) {
+        const auto = [], third = [];
+        groups.forEach(g => { const s = calculateStandings(div.teams.filter(t => t.group === g)); if (s[0]) auto.push(s[0]); if (s[1]) auto.push(s[1]); if (s[2]) third.push(s[2]); });
+        third.sort((a, b) => b.points !== a.points ? b.points - a.points : b.gd - a.gd);
+        const bestThird = third.slice(0, 2);
+        allQualifiers = [...auto, ...bestThird];
+        div.qualifiedTeams = { allQualifiers, winners: auto, best_third: bestThird.map(t => t.id), format: 'three_groups' };
+      } else if (groupCount === 4) {
+        groups.forEach(g => { const s = calculateStandings(div.teams.filter(t => t.group === g)); if (s[0]) allQualifiers.push(s[0]); if (s[1]) allQualifiers.push(s[1]); });
+        div.qualifiedTeams = { allQualifiers, format: 'four_groups' };
+      } else {
+        const winners = [], runners = [], third = [];
+        groups.forEach(g => { const s = calculateStandings(div.teams.filter(t => t.group === g)); if (s[0]) winners.push(s[0]); if (s[1]) runners.push(s[1]); if (s[2]) third.push(s[2]); });
+        third.sort((a, b) => b.points !== a.points ? b.points - a.points : b.gd - a.gd);
+        const needed = 16 - (winners.length + runners.length);
+        const bestThird = third.slice(0, needed);
+        allQualifiers = [...winners, ...runners, ...bestThird];
+        div.qualifiedTeams = { allQualifiers, winners: winners.map(t => t.id), runners_up: runners.map(t => t.id), best_third: bestThird.map(t => t.id), format: `${groupCount}_groups` };
+      }
+      saveCurrentTournament();
+      renderAll();
+      document.getElementById('qualifiersPanel').style.display = 'block';
+      document.getElementById('qualifiersInfo').innerHTML = `<div class="info">${div.qualifiedTeams.allQualifiers.length} teams qualified.</div>`;
+      showMessage(`${div.qualifiedTeams.allQualifiers.length} teams qualified`, 'success');
+    }
+
+    function generateKnockoutBracket() {
+      const div = curDiv();
+      if (!div.qualifiedTeams) { showMessage('Determine qualifiers first', 'alert'); return; }
+      const groupCount = div.groupCount, qualifiers = div.qualifiedTeams.allQualifiers;
+      if (groupCount === 2) {
+        const A1 = calculateStandings(div.teams.filter(t => t.group === 'A'))[0];
+        const A2 = calculateStandings(div.teams.filter(t => t.group === 'A'))[1];
+        const B1 = calculateStandings(div.teams.filter(t => t.group === 'B'))[0];
+        const B2 = calculateStandings(div.teams.filter(t => t.group === 'B'))[1];
+        div.knockoutRounds = [
+          { round: 'Semifinals', matches: [{ teamA: A1, teamB: B2, matchNumber: 1, scoreA: null, scoreB: null, played: false, winner: null }, { teamA: B1, teamB: A2, matchNumber: 2, scoreA: null, scoreB: null, played: false, winner: null }] },
+          { round: 'Final', matches: [{ teamA: null, teamB: null, scoreA: null, scoreB: null, played: false, winner: null }] }
+        ];
+      } else if (groupCount === 3) {
+        const groupA = div.teams.filter(t => t.group === 'A'), groupB = div.teams.filter(t => t.group === 'B'), groupC = div.teams.filter(t => t.group === 'C');
+        const A1 = calculateStandings(groupA)[0], A2 = calculateStandings(groupA)[1];
+        const B1 = calculateStandings(groupB)[0], B2 = calculateStandings(groupB)[1];
+        const C1 = calculateStandings(groupC)[0], C2 = calculateStandings(groupC)[1];
+        const bestThird = div.qualifiedTeams.best_third.map(id => div.teams.find(t => t.id === id));
+        const T1 = bestThird[0], T2 = bestThird[1];
+        div.knockoutRounds = [
+          { round: 'Quarterfinals', matches: [{ teamA: A1, teamB: C2, matchNumber: 1 }, { teamA: C1, teamB: A2, matchNumber: 2 }, { teamA: B1, teamB: T1, matchNumber: 3 }, { teamA: B2, teamB: T2, matchNumber: 4 }].map(m => ({ ...m, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Semifinals', matches: [{ teamA: null, teamB: null, sourceMatches: [0, 2] }, { teamA: null, teamB: null, sourceMatches: [1, 3] }].map(m => ({ ...m, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Final', matches: [{ teamA: null, teamB: null, scoreA: null, scoreB: null, played: false, winner: null }] }
+        ];
+      } else if (groupCount === 4) {
+        const groups = ['A', 'B', 'C', 'D'];
+        const firsts = groups.map(g => calculateStandings(div.teams.filter(t => t.group === g))[0]);
+        const seconds = groups.map(g => calculateStandings(div.teams.filter(t => t.group === g))[1]);
+        div.knockoutRounds = [
+          { round: 'Quarterfinals', matches: [{ teamA: firsts[0], teamB: seconds[3], matchNumber: 1 }, { teamA: firsts[1], teamB: seconds[2], matchNumber: 2 }, { teamA: firsts[2], teamB: seconds[1], matchNumber: 3 }, { teamA: firsts[3], teamB: seconds[0], matchNumber: 4 }].map(m => ({ ...m, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Semifinals', matches: [{ teamA: null, teamB: null, sourceMatches: [0, 2] }, { teamA: null, teamB: null, sourceMatches: [1, 3] }].map(m => ({ ...m, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Final', matches: [{ teamA: null, teamB: null, scoreA: null, scoreB: null, played: false, winner: null }] }
+        ];
+      } else {
+        const sorted = [...qualifiers].sort((a, b) => b.points !== a.points ? b.points - a.points : b.gd - a.gd);
+        const ro16 = [];
+        for (let i = 0; i < 8; i++) ro16.push({ teamA: sorted[i], teamB: sorted[15 - i], matchNumber: i + 1 });
+        div.knockoutRounds = [
+          { round: 'Round of 16', matches: ro16.map(m => ({ ...m, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Quarterfinals', matches: [{ sourceMatches: [0, 1] }, { sourceMatches: [2, 3] }, { sourceMatches: [4, 5] }, { sourceMatches: [6, 7] }].map(m => ({ ...m, teamA: null, teamB: null, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Semifinals', matches: [{ sourceMatches: [0, 1] }, { sourceMatches: [2, 3] }].map(m => ({ ...m, teamA: null, teamB: null, scoreA: null, scoreB: null, played: false, winner: null })) },
+          { round: 'Final', matches: [{}].map(m => ({ ...m, teamA: null, teamB: null, scoreA: null, scoreB: null, played: false, winner: null })) }
+        ];
+      }
+      saveCurrentTournament();
+      renderAll();
+      showMessage(`Knockout bracket generated`, 'success');
+    }
+
+    // ---------- FULL KNOCKOUT SCORE INPUT & PROGRESSION ----------
+    function updateKnockoutMatch(roundIdx, matchIdx) {
+      const div = curDiv();
+      const round = div.knockoutRounds[roundIdx];
+      const match = round.matches[matchIdx];
+      const scoreA = parseInt(document.getElementById(`ko_scoreA_${roundIdx}_${matchIdx}`).value);
+      const scoreB = parseInt(document.getElementById(`ko_scoreB_${roundIdx}_${matchIdx}`).value);
+      if (isNaN(scoreA) || isNaN(scoreB)) { showMessage('Enter valid scores', 'alert'); return; }
+      if (scoreA === scoreB) { showMessage('No draws allowed in knockout', 'alert'); return; }
+
+      match.scoreA = scoreA;
+      match.scoreB = scoreB;
+      match.played = true;
+      match.winner = scoreA > scoreB ? match.teamA : match.teamB;
+
+      // Dynamically push winner to the subsequent round to support any size tree
+      if (roundIdx + 1 < div.knockoutRounds.length) {
+        const nextRound = div.knockoutRounds[roundIdx + 1];
+        const nextMatchIdx = Math.floor(matchIdx / 2);
+        const targetMatch = nextRound.matches[nextMatchIdx];
+
+        if (matchIdx % 2 === 0) {
+          targetMatch.teamA = match.winner;
+        } else {
+          targetMatch.teamB = match.winner;
+        }
+      }
+
+      saveCurrentTournament();
+      renderAll();
+      showMessage(`${match.winner.name} advances!`, 'success');
+    }
+
+    function editKnockoutMatch(roundIdx, matchIdx) {
+      const div = curDiv();
+      const match = div.knockoutRounds[roundIdx].matches[matchIdx];
+      if (!match.played) { showMessage('Match not played yet', 'warning'); return; }
+      match.scoreA = null;
+      match.scoreB = null;
+      match.played = false;
+      match.winner = null;
+
+      // Recursively reset dependencies in future matching branches
+      for (let i = roundIdx + 1; i < div.knockoutRounds.length; i++) {
+        div.knockoutRounds[i].matches.forEach(m => {
+          m.teamA = null; m.teamB = null;
+          m.scoreA = null; m.scoreB = null;
+          m.played = false; m.winner = null;
+        });
+      }
+      saveCurrentTournament();
+      renderAll();
+      showMessage('Match editable, later rounds reset', 'success');
+    }
+
+    // ---------- Rendering knockout with input fields ----------
+    function renderKnockout() {
+      const div = curDiv();
+      const container = document.getElementById('knockoutContainer');
+      if (div.format !== 'tournament' || div.groupCount === 1 || !div.knockoutRounds || !div.knockoutRounds.length) {
+        container.innerHTML = '<p style="text-align:center;color:#999;">No knockout stage generated yet.</p>';
+        return;
+      }
+
+      let html = '<div class="knockout-bracket">';
+      div.knockoutRounds.forEach((r, rIdx) => {
+        html += `<div class="bracket-round"><h3>${r.round}</h3>`;
+        r.matches.forEach((m, mIdx) => {
+          const nameA = m.teamA ? escapeHtml(m.teamA.name) : 'TBD';
+          const nameB = m.teamB ? escapeHtml(m.teamB.name) : 'TBD';
+
+          html += `<div class="bracket-match">
+        <span class="match-label">Match ${mIdx + 1}</span>
+        <div style="margin-top:5px;">
+          <div><strong>${nameA}</strong> vs <strong>${nameB}</strong></div>`;
+
+          if (!m.played) {
+            html += `<div class="score-input-group" style="margin-top:8px;">
+          <input type="number" id="ko_scoreA_${rIdx}_${mIdx}" placeholder="-" min="0" ${!m.teamA || !m.teamB ? 'disabled' : ''}>
+          <span>:</span>
+          <input type="number" id="ko_scoreB_${rIdx}_${mIdx}" placeholder="-" min="0" ${!m.teamA || !m.teamB ? 'disabled' : ''}>
+          <button class="btn-success btn-save" onclick="updateKnockoutMatch(${rIdx}, ${mIdx})" ${!m.teamA || !m.teamB ? 'disabled' : ''}>Save</button>
+        </div>`;
+          } else {
+            html += `<div style="margin-top:8px; color:#1a5f2c; font-weight:bold;">
+          Score: ${m.scoreA} - ${m.scoreB}
+          <button class="btn-danger btn-edit" style="margin-left:10px;" onclick="editKnockoutMatch(${rIdx}, ${mIdx})">Edit</button>
+        </div>
+        <div class="winner-line">Winner: ${escapeHtml(m.winner.name)}</div>`;
+          }
+          html += `</div></div>`;
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // Unified Rendering Coordinator
+    function renderAll() {
+      const div = curDiv();
+      if (!div) return;
+
+      // 1. Teams Count & Listing
+      document.getElementById('teamCount').innerText = div.teams.length;
+      const list = document.getElementById('teamList');
+      list.innerHTML = div.teams.map(t => `
+    <div class="team-item">
+      <span><strong>${escapeHtml(t.name)}</strong> (${div.format === 'tournament' ? 'Pool ' + t.group : 'League'})</span>
+      <button class="btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteTeam(${t.id})">Remove</button>
+    </div>
+  `).join('');
+
+      // 2. Fixtures Matrix
+      const mContainer = document.getElementById('matchesContainer');
+      if (!div.matches.length) {
+        mContainer.innerHTML = '<p style="text-align:center;color:#999;">No matches generated yet.</p>';
+      } else {
+        let mHtml = '<div class="matches-table-wrapper"><table><tr><th>Group</th><th>Matchup</th><th>Score/Action</th><th>Status</th></tr>';
+        div.matches.forEach((m, idx) => {
+          const teamA = div.teams.find(t => t.id === m.teamAId)?.name || 'Deleted Team';
+          const teamB = div.teams.find(t => t.id === m.teamBId)?.name || 'Deleted Team';
+          mHtml += `<tr>
+        <td>${m.group}</td>
+        <td><strong>${escapeHtml(teamA)}</strong> vs <strong>${escapeHtml(teamB)}</strong></td>
+        <td>`;
+          if (!m.played) {
+            mHtml += `<div class="score-input-group">
+          <input type="number" id="scoreA_${idx}" placeholder="-">
+          <span>:</span>
+          <input type="number" id="scoreB_${idx}" placeholder="-">
+          <button class="btn-success btn-save" onclick="updateMatch(${idx})">Save</button>
+        </div>`;
+          } else {
+            mHtml += `<strong>${m.scoreA} - ${m.scoreB}</strong> <button class="btn-danger btn-edit" style="margin-left:10px;" onclick="editMatch(${idx})">Edit</button>`;
+          }
+          mHtml += `</td>
+        <td><span class="status-badge ${m.played ? 'status-completed' : 'status-pending'}">${m.played ? 'Completed' : 'Pending'}</span></td>
+      </tr>`;
+        });
+        mHtml += '</table></div>';
+        mContainer.innerHTML = mHtml;
+      }
+
+      // 3. Dynamic Standings Building
+      const standingsWrapper = document.getElementById('standingsContainer');
+      standingsWrapper.innerHTML = '';
+
+      const distinctGroups = div.format === 'tournament' ? getGroups() : ['League'];
+      distinctGroups.forEach(g => {
+        const gTeams = div.teams.filter(t => t.group === g || div.format !== 'tournament');
+        const sorted = calculateStandings(gTeams);
+
+        let sHtml = `<div class="standings-card">
+      <div class="standings-header">${div.format === 'tournament' ? 'Pool ' + g : 'League Table'}</div>
+      <table>
+        <tr><th>Pos</th><th style="text-align:left;">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>`;
+        sorted.forEach((t, i) => {
+          sHtml += `<tr>
+        <td>${i + 1}</td>
+        <td style="text-align:left;"><strong>${escapeHtml(t.name)}</strong></td>
+        <td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
+        <td>${t.goalsFor}</td><td>${t.goalsAgainst}</td><td>${t.gd}</td>
+        <td><strong>${t.points}</strong></td>
+      </tr>`;
+        });
+        sHtml += '</table></div>';
+        standingsWrapper.innerHTML += sHtml;
+      });
+
+      // 4. Update Qualifiers Pane state Visibility
+      document.getElementById('qualifiersPanel').style.display = (div.format === 'tournament' && div.qualifiedTeams) ? 'block' : 'none';
+
+      // 5. Build Bracket View
+      renderKnockout();
+    }
+
+    function resetDivision() {
+      if (!confirm('Clear all teams, fixtures and knockout brackets for this division?')) return;
+      const div = curDiv();
+      div.teams = []; div.matches = []; div.knockoutRounds = []; div.qualifiedTeams = null; div.nextId = 1;
+      saveCurrentTournament();
+      renderAll();
+      showMessage('Division reset successfully', 'success');
+    }
+
+    function exportToPDF() { showMessage('PDF export initialization placeholder', 'warning'); }
+
+    // --------------------------- APP ENTRY INITIALIZATION ---------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      // Wire up core event listeners
+      document.getElementById('createTournamentBtn').addEventListener('click', createNewTournament);
+      document.getElementById('backToDashboardBtn').addEventListener('click', backToDashboard);
+
+      // Boot operations
+      loadTournaments();
+      renderDashboard();
+    });
+  </script>
+</body>
+
+</html>
