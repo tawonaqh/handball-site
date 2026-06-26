@@ -3,7 +3,7 @@
 
 const ADMIN_CREDENTIALS = {
   username: 'admin',
-  email: 'admin@handball263.com',
+  email: '263handball@gmail.com',
   password: 'admin'
 };
 

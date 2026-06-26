@@ -10,12 +10,12 @@ class PlayerController extends Controller
 {
     public function index()
     {
-        return Player::with('team.league.tournament')->get();
+        return Player::with('team.leagues.tournament')->get();
     }
 
     public function show($id)
     {
-        return Player::with('team.league.tournament')->findOrFail($id);
+        return Player::with('team.leagues.tournament')->findOrFail($id);
     }
 
     public function store(Request $request)

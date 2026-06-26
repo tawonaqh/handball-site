@@ -165,7 +165,7 @@ class BracketService
         $awayScore = (int) $game->away_score;
         $winnerId  = $homeScore >= $awayScore ? $game->home_team_id : $game->away_team_id;
 
-        $nextGame = Game::find($game->next_match_id);
+        $nextGame = Game::query()->find($game->next_match_id);
         if (!$nextGame) return;
 
         // Slot winner into the next game
@@ -185,13 +185,13 @@ class BracketService
         $prefix = $this->getFirstSlotPrefix($league);
 
         // Find bracket games in the first knockout round with empty slots
-        $qfGames = Game::where('league_id', $league->id)
+        $qfGames = Game::where('league_id', '=', $league->id, 'and')
             ->where('bracket_slot', 'like', $prefix . '%')
-            ->whereNull('away_team_id')
+            ->whereNull('away_team_id', 'and', false)
             ->orWhere(function ($q) use ($league, $prefix) {
-                $q->where('league_id', $league->id)
+                $q->where('league_id', '=', $league->id, 'and')
                   ->where('bracket_slot', 'like', $prefix . '%')
-                  ->whereNull('home_team_id');
+                  ->whereNull('home_team_id', 'and', false);
             })
             ->get();
 
@@ -215,8 +215,8 @@ class BracketService
 
     private function playedInSameGroup(int $leagueId, int $teamA, int $teamB): bool
     {
-        return Game::where('league_id', $leagueId)
-            ->whereNotNull('group_label')
+        return Game::where('league_id', '=', $leagueId, 'and')
+            ->whereNotNull('group_label', 'and')
             ->where(function ($q) use ($teamA, $teamB) {
                 $q->where(fn($q2) => $q2->where('home_team_id', $teamA)->where('away_team_id', $teamB))
                   ->orWhere(fn($q2) => $q2->where('home_team_id', $teamB)->where('away_team_id', $teamA));

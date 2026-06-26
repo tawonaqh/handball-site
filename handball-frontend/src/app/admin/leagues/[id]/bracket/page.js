@@ -10,14 +10,14 @@ import WildcardTable from "@/components/tournament/WildcardTable";
 function Field({ label, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-semibold text-gray-600">{label}</label>
+      <label className="text-sm font-semibold text-gray-400">{label}</label>
       {children}
     </div>
   );
 }
 
 const inputCls =
-  "w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-orange-400 bg-white touch-manipulation";
+  "w-full border-2 border-gray-700 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-orange-500 bg-gray-800 text-gray-100 placeholder-gray-500 touch-manipulation";
 
 export default function LeagueBracketPage() {
   const { id } = useParams();
@@ -260,23 +260,23 @@ export default function LeagueBracketPage() {
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">{league?.name}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-bold text-gray-100">{league?.name}</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
             <span className="capitalize">{league?.type ?? "league"}</span>
             {" · "}
             <span className="capitalize">{league?.fixture_type ?? "single"} fixture</span>
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={openSettings} className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 rounded-xl text-sm font-semibold">
+          <button onClick={openSettings} className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-xl text-sm font-semibold border border-gray-700">
             <Settings className="w-4 h-4" /> Settings
           </button>
-          <button onClick={handleRecalculate} disabled={recalculating} className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 rounded-xl text-sm font-semibold disabled:opacity-50">
+          <button onClick={handleRecalculate} disabled={recalculating} className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-xl text-sm font-semibold disabled:opacity-50 border border-gray-700">
             <RefreshCw className={`w-4 h-4 ${recalculating ? "animate-spin" : ""}`} />
             Recalculate
           </button>
           <a href={`${API}/leagues/${id}/rulebook`} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 text-blue-700 rounded-xl text-sm font-semibold hover:bg-blue-100">
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-900/40 text-blue-300 rounded-xl text-sm font-semibold hover:bg-blue-800/50 border border-blue-700/40">
             <FileText className="w-4 h-4" /> Rulebook
           </a>
         </div>
@@ -284,16 +284,16 @@ export default function LeagueBracketPage() {
 
       {message && (
         <div className={`px-4 py-3 rounded-xl text-sm font-medium ${
-          message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
+          message.type === "success" ? "bg-green-900/30 text-green-300 border border-green-700/50" : "bg-red-900/30 text-red-300 border border-red-700/50"
         }`}>
           {message.text}
         </div>
       )}
 
       {/* Generate panel */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
-        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-          <GitBranch className="w-5 h-5 text-orange-500" />
+      <div className="bg-gray-800 rounded-2xl shadow-sm border border-gray-700 p-5 space-y-4">
+        <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
+          <GitBranch className="w-5 h-5 text-orange-400" />
           Generate Fixtures / Bracket
         </h2>
 
@@ -308,15 +308,15 @@ export default function LeagueBracketPage() {
 
         {/* Knockout method selector */}
         {teamIds.trim() && getTeamIds().length >= 2 && (
-          <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 rounded-xl">
-            <span className="text-sm font-semibold text-gray-600">Knockout method:</span>
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-900/50 rounded-xl border border-gray-700">
+            <span className="text-sm font-semibold text-gray-400">Knockout method:</span>
             <select value={knockoutMethod} onChange={(e) => setKnockoutMethod(e.target.value)}
-              className="flex-1 min-w-[160px] border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white">
-              <option value="default">Default (Best vs Worst)</option>
-              <option value="manual">Manual Seeding</option>
-              <option value="crossGroup">Cross-Group Pairing</option>
+              className="flex-1 min-w-[160px] border-2 border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 bg-gray-800 text-gray-100">
+              <option value="default" className="bg-gray-800">Default (Best vs Worst)</option>
+              <option value="manual" className="bg-gray-800">Manual Seeding</option>
+              <option value="crossGroup" className="bg-gray-800">Cross-Group Pairing</option>
             </select>
-            <button onClick={openSeeding} className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-xl text-sm font-semibold hover:bg-purple-600">
+            <button onClick={openSeeding} className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-500">
               <ArrowUpDown className="w-4 h-4" /> Seed
             </button>
           </div>
@@ -324,12 +324,12 @@ export default function LeagueBracketPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button onClick={handleGenerateFixtures} disabled={generating}
-            className="flex items-center justify-center gap-2 py-4 bg-blue-500 active:bg-blue-600 text-white font-bold rounded-2xl disabled:opacity-50">
+            className="flex items-center justify-center gap-2 py-4 bg-blue-600 active:bg-blue-500 text-white font-bold rounded-2xl disabled:opacity-50 hover:bg-blue-500 transition-colors">
             {generating && <RefreshCw className="w-4 h-4 animate-spin" />}
             Generate Round-Robin
           </button>
           <button onClick={handleGenerateBracket} disabled={generating}
-            className="flex items-center justify-center gap-2 py-4 bg-orange-500 active:bg-orange-600 text-white font-bold rounded-2xl disabled:opacity-50">
+            className="flex items-center justify-center gap-2 py-4 bg-orange-600 active:bg-orange-500 text-white font-bold rounded-2xl disabled:opacity-50 hover:bg-orange-500 transition-colors">
             {generating && <RefreshCw className="w-4 h-4 animate-spin" />}
             Generate Knockout Bracket
           </button>
@@ -338,9 +338,9 @@ export default function LeagueBracketPage() {
 
       {/* Bracket visualization */}
       {bracket?.rounds?.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
-            <GitBranch className="w-5 h-5 text-orange-500" /> Bracket
+        <div className="bg-gray-800 rounded-2xl shadow-sm border border-gray-700 p-5">
+          <h2 className="text-base font-bold text-gray-100 flex items-center gap-2 mb-4">
+            <GitBranch className="w-5 h-5 text-orange-400" /> Bracket
           </h2>
           <BracketView bracket={bracket} />
         </div>
@@ -350,11 +350,11 @@ export default function LeagueBracketPage() {
 
       {/* Settings modal */}
       {showSettings && settings && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowSettings(false)}>
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowSettings(false)}>
+          <div className="bg-gray-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-gray-700" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Settings className="w-5 h-5" /> Settings</h2>
-              <button onClick={() => setShowSettings(false)} className="text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+              <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2"><Settings className="w-5 h-5 text-orange-400" /> Settings</h2>
+              <button onClick={() => setShowSettings(false)} className="text-2xl text-gray-500 hover:text-gray-300">&times;</button>
             </div>
 
             <div className="space-y-5">
@@ -372,33 +372,33 @@ export default function LeagueBracketPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <Field label="Win Pts">
-                  <input type="number" value={league?.win_points ?? 2} disabled className={inputCls} />
+                  <input type="number" value={league?.win_points ?? 2} disabled className={inputCls + " opacity-60"} />
                 </Field>
                 <Field label="Draw Pts">
-                  <input type="number" value={league?.draw_points ?? 1} disabled className={inputCls} />
+                  <input type="number" value={league?.draw_points ?? 1} disabled className={inputCls + " opacity-60"} />
                 </Field>
                 <Field label="Loss Pts">
-                  <input type="number" value={league?.loss_points ?? 0} disabled className={inputCls} />
+                  <input type="number" value={league?.loss_points ?? 0} disabled className={inputCls + " opacity-60"} />
                 </Field>
               </div>
 
               <Field label="Shootout">
                 <select value={settings.shootout_enabled} onChange={(e) => setSettings({ ...settings, shootout_enabled: e.target.value })}
                   className={inputCls}>
-                  <option value="yes">Yes (after overtime)</option>
-                  <option value="no">No (tie stands)</option>
+                  <option value="yes" className="bg-gray-800">Yes (after overtime)</option>
+                  <option value="no" className="bg-gray-800">No (tie stands)</option>
                 </select>
               </Field>
 
               <div>
-                <label className="text-sm font-semibold text-gray-600 block mb-2">Tiebreaker Order</label>
+                <label className="text-sm font-semibold text-gray-400 block mb-2">Tiebreaker Order</label>
                 <ul className="space-y-1">
                   {tiebreakerOrder.map((tb, i) => (
-                    <li key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border-l-4 border-orange-400">
-                      <span className="font-bold text-orange-600 min-w-[24px]">{i + 1}.</span>
-                      <span className="flex-1 text-sm">{tb}</span>
-                      <button disabled={i === 0} onClick={() => moveTiebreaker(i, -1)} className="px-2 py-1 text-sm border rounded hover:bg-gray-200 disabled:opacity-30">&uarr;</button>
-                      <button disabled={i === tiebreakerOrder.length - 1} onClick={() => moveTiebreaker(i, 1)} className="px-2 py-1 text-sm border rounded hover:bg-gray-200 disabled:opacity-30">&darr;</button>
+                    <li key={i} className="flex items-center gap-2 p-2 bg-gray-900/50 rounded-lg border-l-4 border-orange-500">
+                      <span className="font-bold text-orange-400 min-w-[24px]">{i + 1}.</span>
+                      <span className="flex-1 text-sm text-gray-200">{tb}</span>
+                      <button disabled={i === 0} onClick={() => moveTiebreaker(i, -1)} className="px-2 py-1 text-sm border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-30 text-gray-300">&uarr;</button>
+                      <button disabled={i === tiebreakerOrder.length - 1} onClick={() => moveTiebreaker(i, 1)} className="px-2 py-1 text-sm border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-30 text-gray-300">&darr;</button>
                     </li>
                   ))}
                 </ul>
@@ -406,8 +406,8 @@ export default function LeagueBracketPage() {
             </div>
 
             <div className="flex gap-3 mt-6 justify-end">
-              <button onClick={() => setShowSettings(false)} className="px-6 py-3 bg-gray-100 rounded-xl font-semibold">Cancel</button>
-              <button onClick={saveSettings} className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold">Save</button>
+              <button onClick={() => setShowSettings(false)} className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl font-semibold">Cancel</button>
+              <button onClick={saveSettings} className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-semibold">Save</button>
             </div>
           </div>
         </div>
@@ -415,13 +415,13 @@ export default function LeagueBracketPage() {
 
       {/* Manual seeding modal */}
       {showSeeding && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowSeeding(false)}>
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowSeeding(false)}>
+          <div className="bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-gray-700" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Shuffle className="w-5 h-5" /> Manual Seeding</h2>
-              <button onClick={() => setShowSeeding(false)} className="text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+              <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2"><Shuffle className="w-5 h-5 text-orange-400" /> Manual Seeding</h2>
+              <button onClick={() => setShowSeeding(false)} className="text-2xl text-gray-500 hover:text-gray-300">&times;</button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">Drag rows or use arrows to reorder. 1st seed vs last seed, 2nd vs 2nd-last, etc.</p>
+            <p className="text-sm text-gray-400 mb-4">Drag rows or use arrows to reorder. 1st seed vs last seed, 2nd vs 2nd-last, etc.</p>
 
             <div className="flex gap-6 flex-wrap">
               <div className="flex-1 min-w-[280px]">
@@ -434,14 +434,14 @@ export default function LeagueBracketPage() {
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(idx)}
                       className={`flex items-center gap-3 p-3 mb-2 rounded-xl border-2 cursor-grab active:cursor-grabbing transition-all
-                        ${dragIndex === idx ? "opacity-50 border-dashed border-gray-400" : "border-gray-100 hover:border-orange-300"}`}>
-                      <span className="text-gray-400 text-lg">&#x2630;</span>
-                      <span className="font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-sm min-w-[28px] text-center">#{idx + 1}</span>
-                      <span className="flex-1 font-semibold">{t?.name || `#${tid}`}</span>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{t?.ranking?.points || 0} pts</span>
+                        ${dragIndex === idx ? "opacity-50 border-dashed border-gray-500" : "border-gray-700 hover:border-orange-500 bg-gray-900/50"}`}>
+                      <span className="text-gray-500 text-lg">&#x2630;</span>
+                      <span className="font-bold text-orange-400 bg-orange-900/30 px-2 py-0.5 rounded-full text-sm min-w-[28px] text-center">#{idx + 1}</span>
+                      <span className="flex-1 font-semibold text-gray-200">{t?.name || `#${tid}`}</span>
+                      <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">{t?.ranking?.points || 0} pts</span>
                       <div className="flex gap-1">
-                        <button disabled={idx === 0} onClick={() => moveSeed(idx, -1)} className="px-2 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-30">&uarr;</button>
-                        <button disabled={idx === seedingOrder.length - 1} onClick={() => moveSeed(idx, 1)} className="px-2 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-30">&darr;</button>
+                        <button disabled={idx === 0} onClick={() => moveSeed(idx, -1)} className="px-2 py-1 text-sm border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-30 text-gray-300">&uarr;</button>
+                        <button disabled={idx === seedingOrder.length - 1} onClick={() => moveSeed(idx, 1)} className="px-2 py-1 text-sm border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-30 text-gray-300">&darr;</button>
                       </div>
                     </div>
                   );
@@ -449,23 +449,23 @@ export default function LeagueBracketPage() {
               </div>
 
               {/* Bracket preview */}
-              <div className="w-full sm:w-64 bg-gray-50 rounded-xl p-4 h-fit border border-gray-200">
-                <h4 className="text-sm font-bold text-green-800 text-center mb-3 pb-2 border-b-2 border-orange-400">Bracket Preview</h4>
+              <div className="w-full sm:w-64 bg-gray-900 rounded-xl p-4 h-fit border border-gray-700">
+                <h4 className="text-sm font-bold text-orange-400 text-center mb-3 pb-2 border-b-2 border-orange-500">Bracket Preview</h4>
                 {pairs.map((pair, idx) => (
-                  <div key={idx} className="flex items-center justify-between bg-white px-3 py-2 mb-1.5 rounded-lg text-sm border-l-4 border-orange-400">
-                    <span><span className="font-bold text-green-700">{seedingOrder.indexOf(pair[0]) + 1}</span> {getTeamName(pair[0])}</span>
-                    <span className="text-gray-400 mx-1">vs</span>
-                    <span>{getTeamName(pair[1])} <span className="font-bold text-green-700">{seedingOrder.indexOf(pair[1]) + 1}</span></span>
+                  <div key={idx} className="flex items-center justify-between bg-gray-800 px-3 py-2 mb-1.5 rounded-lg text-sm border-l-4 border-orange-500">
+                    <span><span className="font-bold text-orange-400">{seedingOrder.indexOf(pair[0]) + 1}</span> <span className="text-gray-200">{getTeamName(pair[0])}</span></span>
+                    <span className="text-gray-500 mx-1">vs</span>
+                    <span className="text-gray-200">{getTeamName(pair[1])} <span className="font-bold text-orange-400">{seedingOrder.indexOf(pair[1]) + 1}</span></span>
                   </div>
                 ))}
-                {pairs.length === 0 && <p className="text-gray-400 text-sm text-center py-4">Need at least 2 teams</p>}
+                {pairs.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Need at least 2 teams</p>}
               </div>
             </div>
 
             <div className="flex gap-3 mt-6 justify-end">
-              <button onClick={resetSeeding} className="px-6 py-3 bg-gray-100 rounded-xl font-semibold">Reset</button>
-              <button onClick={() => setShowSeeding(false)} className="px-6 py-3 bg-gray-300 rounded-xl font-semibold">Cancel</button>
-              <button onClick={applySeeding} className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold">Apply Seeding</button>
+              <button onClick={resetSeeding} className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl font-semibold">Reset</button>
+              <button onClick={() => setShowSeeding(false)} className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl font-semibold">Cancel</button>
+              <button onClick={applySeeding} className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-semibold">Apply Seeding</button>
             </div>
           </div>
         </div>

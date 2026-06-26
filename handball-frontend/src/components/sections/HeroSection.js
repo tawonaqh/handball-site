@@ -215,7 +215,7 @@ export default function HeroSection() {
                   transition={{ delay: stat.delay, duration: 0.6 }}
                   className="text-center group"
                 >
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 group-hover:bg-white/20 transition-all duration-300">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 group-hover:bg-white/20 transition-all duration-300 shadow-lg">
                     <stat.icon className="text-yellow-400 group-hover:text-yellow-300" size={18} />
                   </div>
                   <div className="text-xl sm:text-2xl md:text-3xl font-black text-yellow-400 mb-1 group-hover:text-yellow-300 transition-colors">
@@ -226,6 +226,23 @@ export default function HeroSection() {
                   </div>
                 </motion.div>
               ))}
+            </motion.div>
+
+            {/* Scroll indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isLoaded ? 1 : 0 }}
+              transition={{ delay: 1.5, duration: 0.8 }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2"
+            >
+              <span className="text-xs text-white/50 font-medium tracking-widest uppercase">Scroll</span>
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="w-5 h-8 border-2 border-white/30 rounded-full flex items-start justify-center p-1"
+              >
+                <motion.div className="w-1.5 h-1.5 bg-white/60 rounded-full" />
+              </motion.div>
             </motion.div>
           </motion.div>
         </div>

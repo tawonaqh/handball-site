@@ -14,36 +14,36 @@ const getRoundLabel = (slot) => {
 };
 
 const statusBorder = (status) => {
-  if (status === "completed") return "border-green-400 bg-green-50";
-  if (status === "live")      return "border-orange-400 bg-orange-50";
-  return "border-gray-200 bg-white";
+  if (status === "completed") return "border-orange-500 bg-orange-500/10";
+  if (status === "live")      return "border-green-400 bg-green-500/10";
+  return "border-gray-700 bg-gray-800";
 };
 
 function GameCard({ game }) {
   return (
     <div className={`border-2 rounded-xl overflow-hidden shadow-sm ${statusBorder(game.status)}`}>
       {/* Home */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
-        <span className={`text-sm font-medium truncate max-w-[130px] ${!game.homeTeam ? "text-gray-300 italic" : "text-gray-800"}`}>
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-700/50">
+        <span className={`text-sm font-medium truncate max-w-[130px] ${!game.homeTeam ? "text-gray-600 italic" : "text-gray-200"}`}>
           {game.homeTeam?.name ?? "TBD"}
         </span>
-        <span className="text-sm font-bold text-gray-900 ml-2 min-w-[22px] text-right">
+        <span className="text-sm font-bold text-gray-100 ml-2 min-w-[22px] text-right">
           {game.homeScore ?? "–"}
         </span>
       </div>
       {/* Away */}
       <div className="flex items-center justify-between px-3 py-2.5">
-        <span className={`text-sm font-medium truncate max-w-[130px] ${!game.awayTeam ? "text-gray-300 italic" : "text-gray-800"}`}>
+        <span className={`text-sm font-medium truncate max-w-[130px] ${!game.awayTeam ? "text-gray-600 italic" : "text-gray-200"}`}>
           {game.awayTeam?.name ?? "TBD"}
         </span>
-        <span className="text-sm font-bold text-gray-900 ml-2 min-w-[22px] text-right">
+        <span className="text-sm font-bold text-gray-100 ml-2 min-w-[22px] text-right">
           {game.awayScore ?? "–"}
         </span>
       </div>
       {/* Date */}
       {game.matchDate && (
-        <div className="px-3 py-1 bg-gray-50 border-t border-gray-100">
-          <span className="text-[10px] text-gray-400">
+        <div className="px-3 py-1 bg-gray-800/50 border-t border-gray-700/50">
+          <span className="text-[10px] text-gray-500">
             {new Date(game.matchDate).toLocaleDateString()}
           </span>
         </div>
@@ -58,7 +58,7 @@ function GameCard({ game }) {
  */
 export default function BracketView({ bracket }) {
   if (!bracket?.rounds?.length) {
-    return <p className="text-center py-12 text-gray-400 text-sm">No bracket data available.</p>;
+    return <p className="text-center py-12 text-gray-500 text-sm">No bracket data available.</p>;
   }
 
   const rounds = bracket.rounds;
@@ -72,7 +72,7 @@ export default function BracketView({ bracket }) {
             <div key={round.round} className="flex flex-col gap-3 min-w-[210px]">
               {/* Round label */}
               <div className="text-center">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
                   {getRoundLabel(round.games[0]?.slot) || `Round ${round.round}`}
                 </span>
               </div>
@@ -94,8 +94,8 @@ export default function BracketView({ bracket }) {
 
           {/* Trophy */}
           <div className="flex flex-col items-center justify-center min-w-[56px] pt-10">
-            <Trophy className="w-9 h-9 text-yellow-500" />
-            <span className="text-[10px] text-gray-400 mt-1">Winner</span>
+            <Trophy className="w-9 h-9 text-orange-400" />
+            <span className="text-[10px] text-gray-500 mt-1">Winner</span>
           </div>
         </div>
       </div>
@@ -108,10 +108,10 @@ export default function BracketView({ bracket }) {
             <div key={round.round}>
               {/* Round header */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
                   {label}
                 </span>
-                <div className="flex-1 h-px bg-gray-100" />
+                <div className="flex-1 h-px bg-gray-700/50" />
               </div>
 
               {/* Games — full-width cards, easy to read on phone */}
@@ -126,8 +126,8 @@ export default function BracketView({ bracket }) {
 
         {/* Trophy */}
         <div className="flex items-center justify-center gap-2 pt-2">
-          <Trophy className="w-6 h-6 text-yellow-500" />
-          <span className="text-sm font-semibold text-gray-500">Winner</span>
+          <Trophy className="w-6 h-6 text-orange-400" />
+          <span className="text-sm font-semibold text-gray-400">Winner</span>
         </div>
       </div>
     </>

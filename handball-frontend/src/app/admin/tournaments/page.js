@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { fetcher } from '@/lib/api';
 import Link from 'next/link';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 const TournamentCard = ({ tournament, index }) => {
   return (
@@ -137,31 +138,28 @@ export default function TournamentsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
-            <Flag className="w-8 h-8 text-orange-500" />
-            <span>Tournaments</span>
-          </h1>
-          <p className="text-gray-400 mt-2">Manage tournament competitions</p>
-        </div>
-        
-        <Link href="/admin/tournaments/create">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Create Tournament</span>
-          </motion.button>
-        </Link>
-      </motion.div>
+      {/* Page Header */}
+      <AdminPageHeader
+        title="Tournaments"
+        description="Manage tournament competitions"
+        icon={Flag}
+        gradient="from-orange-500 to-orange-600"
+        breadcrumbs={[
+          { label: "Tournaments" }
+        ]}
+        action={
+          <Link href="/admin/tournaments/create">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Create Tournament</span>
+            </motion.button>
+          </Link>
+        }
+      />
 
       {/* Filters */}
       <motion.div

@@ -33,6 +33,11 @@ Route::prefix('leagues')->group(function () {
     Route::post('/', [LeagueController::class, 'store']);
     Route::put('/{id}', [LeagueController::class, 'update']);
     Route::delete('/{id}', [LeagueController::class, 'destroy']);
+    // Team enrollment
+    Route::get('/{id}/teams', [LeagueController::class, 'getTeams']);
+    Route::post('/{id}/teams', [LeagueController::class, 'addTeam']);
+    Route::put('/{id}/teams/{teamId}', [LeagueController::class, 'updateTeam']);
+    Route::delete('/{id}/teams/{teamId}', [LeagueController::class, 'removeTeam']);
 });
 
 Route::prefix('news')->group(function () {

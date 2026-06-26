@@ -1,515 +1,283 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetcher } from '@/lib/api';
 import { 
-  Flag, Trophy, Plus, ArrowLeft, Calendar, MapPin, 
-  Settings, Users, ChevronRight, Save, Trash2, Edit2, X
+  Trophy, Plus, ArrowLeft, Calendar, Users, 
+  ChevronRight, X, Search, Filter, RefreshCw
 } from 'lucide-react';
+import TournamentManager from '@/components/tournament/TournamentManager';
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+});
+
+const typeLabels = {
+  league: 'League',
+  knockout: 'Groups+KO',
+  knockout_only: 'KO Only',
+  league_knockout: 'League+KO',
+};
+
+const genderLabels = {
+  women: 'Ladies',
+  men: 'Gents',
+};
+
+function StatBadge({ label, count, color }) {
+  const colors = {
+    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    pink: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+    green: 'bg-green-500/10 text-green-400 border-green-500/20',
+    yellow: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+  };
+  return (
+    <div className={`${colors[color] || colors.blue} border rounded-xl px-4 py-3 text-center`}>
+      <p className="text-2xl font-bold">{count}</p>
+      <p className="text-xs opacity-80 mt-0.5">{label}</p>
+    </div>
+  );
+}
 
 export default function CentralAdminPage() {
-  const [tournaments, setTournaments] = useState([]);
-  const [allTeams, setAllTeams] = useState([]); // For dropdowns
-  const [currentTournament, setCurrentTournament] = useState(null);
-  const [currentDiv, setCurrentDiv] = useState('Ladies'); // 'Ladies' or 'Gents'
+  const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState(null);
+  const [currentLeagueId, setCurrentLeagueId] = useState(null);
 
-  // League data for current division
-  const [divisionLeague, setDivisionLeague] = useState(null);
-  const [teams, setTeams] = useState([]);
-  const [matches, setMatches] = useState([]);
-  const [standings, setStandings] = useState([]);
-  const [bracket, setBracket] = useState(null);
+  const [seasonFilter, setSeasonFilter] = useState('all');
+  const [searchFilter, setSearchFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('all');
 
-  // Modals state
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showLeagueModal, setShowLeagueModal] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '', gender: 'women', type: 'league',
+    max_teams: 16, num_groups: 4, teams_per_group: 4,
+    knockout_rounds: '', qualify_spots: 4,
+  });
 
-  // Form states
-  const [tForm, setTForm] = useState({ name: '', start_date: '', end_date: '', location: '' });
-  const [lForm, setLForm] = useState({ type: 'league', max_teams: 10, num_groups: 1 });
-  const [teamForm, setTeamForm] = useState({ team_id: '' });
-
-  useEffect(() => {
-    loadData();
+  const showMsg = useCallback((text, type = 'success') => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 4000);
   }, []);
 
-  useEffect(() => {
-    if (currentTournament) {
-      loadDivisionData();
-    }
-  }, [currentTournament, currentDiv]);
-
-  async function loadData() {
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
     try {
-      setLoading(true);
-      const [tData, teamsData] = await Promise.all([
-        fetcher('tournaments'),
-        fetcher('teams')
-      ]);
-      setTournaments(tData || []);
-      setAllTeams(teamsData || []);
-    } catch (err) {
-      showMessage('Failed to load data', 'error');
+      const data = await fetcher('leagues');
+      setLeagues(data || []);
+    } catch (e) {
+      showMsg('Failed to load data', 'error');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, [showMsg]);
 
-  async function loadDivisionData() {
-    if (!currentTournament) return;
-    
-    try {
-      setLoading(true);
-      const leagues = await fetcher('leagues');
-      const gender = currentDiv === 'Ladies' ? 'women' : 'men';
-      const league = leagues.find(l => l.tournament?.id === currentTournament.id && l.gender === gender);
-      
-      if (league) {
-        setDivisionLeague(league);
-        const [tData, gData, sData, bData] = await Promise.all([
-          fetcher(`leagues/${league.id}/teams`).catch(() => []),
-          fetcher(`games?league=${league.id}`).catch(() => []),
-          fetcher(`leagues/${league.id}/standings`).catch(() => []),
-          fetcher(`leagues/${league.id}/bracket`).catch(() => null)
-        ]);
-        
-        setTeams(tData?.teams || tData || []);
-        setMatches(gData || []);
-        setStandings(sData || []);
-        setBracket(bData || null);
-      } else {
-        setDivisionLeague(null);
-        setTeams([]);
-        setMatches([]);
-        setStandings([]);
-        setBracket(null);
-      }
-    } catch (err) {
-      showMessage('Failed to load division data', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => { loadData(); }, [loadData]);
 
-  function showMessage(text, type = 'success') {
-    setMessage({ text, type });
-    setTimeout(() => setMessage(null), 3000);
-  }
+  const seasons = useMemo(
+    () => [...new Set(leagues.map((l) => l.season).filter(Boolean))].sort(),
+    [leagues]
+  );
 
-  // --- API Actions ---
+  const stats = useMemo(() => ({
+    total: leagues.length,
+    ladies: leagues.filter((l) => l.gender === 'women').length,
+    gents: leagues.filter((l) => l.gender === 'men').length,
+    league: leagues.filter((l) => l.type === 'league').length,
+    knockout: leagues.filter((l) => l.type === 'knockout' || l.type === 'knockout_only' || l.type === 'league_knockout').length,
+    totalTeams: leagues.reduce((sum, l) => sum + (l.teams?.length || 0), 0),
+  }), [leagues]);
 
-  async function handleCreateTournament(e) {
+  const filteredLeagues = leagues.filter((l) => {
+    if (seasonFilter !== 'all' && l.season !== seasonFilter) return false;
+    if (genderFilter !== 'all' && l.gender !== genderFilter) return false;
+    if (searchFilter && !l.name.toLowerCase().includes(searchFilter.toLowerCase())) return false;
+    return true;
+  });
+
+  const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api'}/tournaments`, {
+      const res = await fetch(`${API}/leagues`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        },
-        body: JSON.stringify(tForm)
+        headers: authHeaders(),
+        body: JSON.stringify(createForm),
       });
       if (res.ok) {
-        showMessage('Tournament created successfully');
-        setShowCreateModal(false);
+        const league = await res.json();
+        showMsg('Tournament created');
+        setShowCreate(false);
+        setCreateForm({ name: '', gender: 'women', type: 'league', max_teams: 16, num_groups: 4, teams_per_group: 4, knockout_rounds: '', qualify_spots: 4 });
         loadData();
+        setCurrentLeagueId(league.id);
       } else {
-        showMessage('Failed to create tournament', 'error');
+        showMsg('Failed to create', 'error');
       }
-    } catch (err) {
-      showMessage('Error creating tournament', 'error');
+    } catch (e) {
+      showMsg('Error creating', 'error');
     }
-  }
-
-  async function handleCreateLeague(e) {
-    e.preventDefault();
-    try {
-      const gender = currentDiv === 'Ladies' ? 'women' : 'men';
-      const payload = {
-        name: `${currentTournament.name} - ${currentDiv}`,
-        tournament_id: currentTournament.id,
-        gender: gender,
-        season: new Date().getFullYear().toString(),
-        type: lForm.type,
-        max_teams: parseInt(lForm.max_teams) || 10,
-        num_groups: lForm.type === 'knockout' ? parseInt(lForm.num_groups) || 1 : null,
-        status: 'active'
-      };
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api'}/leagues`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        showMessage(`Created ${currentDiv} League successfully`);
-        setShowLeagueModal(false);
-        loadDivisionData();
-      } else {
-        showMessage('Failed to create league', 'error');
-      }
-    } catch (err) {
-      showMessage('Error creating league', 'error');
-    }
-  }
-
-  async function handleAddTeam(e) {
-    e.preventDefault();
-    if (!teamForm.team_id) { showMessage('Select a team', 'warning'); return; }
-    try {
-      // Typically there's an endpoint to add a team to a league. 
-      // If none exists, this might fail, but let's assume `POST /leagues/:id/teams` or similar.
-      // Mocking for now, adjust based on actual API
-      showMessage('Team added to league', 'success');
-      setShowTeamModal(false);
-      loadDivisionData();
-    } catch (err) {
-      showMessage('Error adding team', 'error');
-    }
-  }
-
-  async function generateFixtures() {
-    try {
-      // Call generateFixtures API from your lib
-      const startDate = new Date().toISOString().split('T')[0];
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api'}/leagues/${divisionLeague.id}/generate-fixtures`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ start_date: startDate })
-      });
-      if (res.ok) {
-        showMessage('Fixtures generated');
-        loadDivisionData();
-      } else {
-        showMessage('Failed to generate fixtures', 'error');
-      }
-    } catch (err) {
-      showMessage('Error generating fixtures', 'error');
-    }
-  }
-
-  const [scoreInputs, setScoreInputs] = useState({});
-
-  const handleScoreChange = (matchId, team, value) => {
-    setScoreInputs(prev => ({
-      ...prev,
-      [matchId]: { ...prev[matchId], [team]: value }
-    }));
   };
 
-  async function handleSaveScore(matchId) {
-    const scores = scoreInputs[matchId];
-    if (!scores || scores.home === undefined || scores.away === undefined || scores.home === '' || scores.away === '') {
-      showMessage('Please enter both scores', 'warning');
-      return;
-    }
-    
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    if (!confirm('Delete this tournament permanently?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api'}/games/${matchId}/score`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        },
-        body: JSON.stringify({ home_score: parseInt(scores.home), away_score: parseInt(scores.away) })
-      });
-      if (res.ok) {
-        showMessage('Score updated successfully');
-        loadDivisionData(); // reload matches and standings
-      } else {
-        showMessage('Failed to update score', 'error');
-      }
-    } catch (err) {
-      showMessage('Error saving score', 'error');
+      await fetch(`${API}/leagues/${id}`, { method: 'DELETE', headers: authHeaders() });
+      showMsg('Tournament deleted');
+      loadData();
+    } catch (e) {
+      showMsg('Failed to delete', 'error');
     }
-  }
-
-  // ---- RENDERERS ----
+  };
 
   const renderDashboard = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700/50 shadow-xl gap-4">
+    <div className="space-y-6">
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatBadge label="Total" count={stats.total} color="blue" />
+        <StatBadge label="Ladies" count={stats.ladies} color="pink" />
+        <StatBadge label="Gents" count={stats.gents} color="green" />
+        <StatBadge label="League" count={stats.league} color="yellow" />
+        <StatBadge label="Knockout" count={stats.knockout} color="blue" />
+        <StatBadge label="Teams" count={stats.totalTeams} color="green" />
+      </div>
+
+      {/* Filter Bar */}
+      <div className="bg-gray-800/80 backdrop-blur-md rounded-2xl p-4 border border-gray-700/50 flex flex-wrap gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-semibold text-gray-400">Season:</label>
+          <select value={seasonFilter} onChange={(e) => setSeasonFilter(e.target.value)}
+            className="bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+            <option value="all">All Seasons</option>
+            {seasons.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+          <Search className="w-4 h-4 text-gray-500 shrink-0" />
+          <input type="text" value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)}
+            placeholder="Search tournaments..."
+            className="flex-1 bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-gray-500" />
+          <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}
+            className="bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+            <option value="all">All Divisions</option>
+            <option value="women">Ladies</option>
+            <option value="men">Gents</option>
+          </select>
+        </div>
+        <button onClick={() => { setSeasonFilter('all'); setSearchFilter(''); setGenderFilter('all'); }}
+          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl text-sm font-semibold transition-colors">
+          Clear
+        </button>
+        <button onClick={() => loadData(true)} disabled={refreshing}
+          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50">
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-yellow-500 flex items-center gap-3">
             <Trophy className="w-8 h-8 text-yellow-500" />
             Tournament Dashboard
           </h2>
-          <p className="text-gray-400 mt-1 text-sm sm:text-base">Select a tournament to manage its leagues, fixtures, and brackets</p>
+          <p className="text-gray-400 mt-1 text-sm">Select a tournament to manage teams, fixtures, standings, and more</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 transition-all hover:-translate-y-1 w-full sm:w-auto justify-center"
-        >
-          <Plus className="w-5 h-5" />
-          New Tournament
+        <button onClick={() => setShowCreate(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 text-white rounded-xl font-bold shadow-lg transition-all hover:-translate-y-1">
+          <Plus className="w-5 h-5" /> New Tournament
         </button>
       </div>
 
+      {/* Tournament Cards */}
+      {filteredLeagues.length === 0 && !loading && (
+        <div className="p-10 text-center text-gray-400 bg-gray-800/50 rounded-2xl border border-gray-700/50">
+          {leagues.length === 0 ? (
+            <div className="space-y-3">
+              <Trophy className="w-12 h-12 mx-auto text-gray-600" />
+              <p className="text-lg font-semibold">No tournaments yet</p>
+              <p className="text-sm">Create one to get started.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Search className="w-10 h-10 mx-auto text-gray-600" />
+              <p>No tournaments match your filters.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tournaments.length === 0 && !loading && (
-          <div className="col-span-full p-8 text-center text-gray-400 bg-gray-800/50 rounded-2xl border border-gray-700/50">
-            No tournaments found. Create one to get started.
-          </div>
-        )}
-        {tournaments.map((t, idx) => (
-          <motion.div
-            key={t.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.1 }}
-            className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700/50 hover:border-yellow-500/50 shadow-lg cursor-pointer group transition-all"
-            onClick={() => setCurrentTournament(t)}
-          >
+        {filteredLeagues.map((league, idx) => (
+          <motion.div key={league.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            onClick={() => setCurrentLeagueId(league.id)}
+            className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700/50 hover:border-yellow-500/50 shadow-lg cursor-pointer group transition-all">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors">
-                {t.name}
-              </h3>
-              <div className="p-2 bg-gray-700/50 rounded-lg group-hover:bg-yellow-500/20 transition-colors">
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-yellow-400" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors truncate">
+                  {league.name}
+                </h3>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    league.gender === 'women' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+                  }`}>
+                    {genderLabels[league.gender] || 'Mixed'}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-500/20 text-green-400">
+                    {typeLabels[league.type] || league.type}
+                  </span>
+                  {league.season && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-600/50 text-gray-300">
+                      {league.season}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={(e) => handleDelete(league.id, e)}
+                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="p-2 bg-gray-700/50 rounded-lg group-hover:bg-yellow-500/20 transition-colors">
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-yellow-400" />
+                </div>
               </div>
             </div>
-            <div className="space-y-2 text-sm text-gray-400">
+            <div className="space-y-1.5 text-sm text-gray-400">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-green-400" />
-                {t.start_date ? new Date(t.start_date).toLocaleDateString() : 'TBD'}
+                <Users className="w-4 h-4 text-blue-400" />
+                {league.teams?.length || 0}{league.max_teams ? ` / ${league.max_teams}` : ''} Teams
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-red-400" />
-                {t.location || 'Venue TBD'}
+                <Calendar className="w-4 h-4 text-green-400" />
+                {league.season || 'Current'}
               </div>
             </div>
           </motion.div>
         ))}
       </div>
-    </motion.div>
-  );
-
-  const renderTournamentView = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
-    >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-800/80 backdrop-blur-md p-4 rounded-2xl border border-gray-700/50 gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => { setCurrentTournament(null); setScoreInputs({}); }}
-            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">{currentTournament.name}</h2>
-        </div>
-        
-        {/* Division Toggle */}
-        <div className="flex p-1 bg-gray-900/50 rounded-full border border-gray-700/50 w-full sm:w-auto">
-          {['Ladies', 'Gents'].map(div => (
-            <button
-              key={div}
-              onClick={() => { setCurrentDiv(div); setScoreInputs({}); }}
-              className={`flex-1 sm:flex-none px-6 sm:px-8 py-2 rounded-full font-bold transition-all text-sm sm:text-base ${
-                currentDiv === div 
-                  ? 'bg-gradient-to-r from-green-600 to-green-800 text-white shadow-lg shadow-green-900/50' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {div}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {!divisionLeague && !loading ? (
-        <div className="p-8 text-center bg-gray-800/50 rounded-2xl border border-gray-700/50">
-          <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-8 h-8 text-gray-500" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">No {currentDiv} League Found</h3>
-          <p className="text-gray-400 mb-6">There is no league configured for the {currentDiv} division in this tournament.</p>
-          <button 
-            onClick={() => setShowLeagueModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl font-bold shadow-lg transition-transform hover:scale-105"
-          >
-            Create {currentDiv} League
-          </button>
-        </div>
-      ) : divisionLeague ? (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Main Content Area */}
-          <div className="xl:col-span-2 space-y-6">
-            
-            {/* Teams Panel */}
-            <div className="bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700/50 shadow-xl">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Users className="w-6 h-6 text-blue-400" />
-                  Teams ({teams.length}/{divisionLeague.max_teams || '?'})
-                </h3>
-                <button 
-                  onClick={() => setShowTeamModal(true)}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
-                >
-                  <Plus className="w-4 h-4" /> Add Team
-                </button>
-              </div>
-              
-              {teams.length === 0 ? (
-                <p className="text-gray-400 italic">No teams added yet.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                  {teams.map(team => (
-                    <div key={team.id} className="flex justify-between items-center p-3 bg-gray-700/30 rounded-xl border border-gray-600/30 border-l-4 border-l-green-500">
-                      <span className="font-semibold text-gray-200">{team.name}</span>
-                      <button className="p-1 text-red-400 hover:bg-red-500/20 rounded">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Fixtures Panel */}
-            <div className="bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700/50 shadow-xl">
-               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Calendar className="w-6 h-6 text-yellow-500" />
-                  Fixtures & Results
-                </h3>
-                <button 
-                  onClick={generateFixtures}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white rounded-lg text-sm font-bold transition-all shadow-lg w-full sm:w-auto"
-                >
-                  Generate Fixtures
-                </button>
-              </div>
-              
-              {matches.length === 0 ? (
-                <p className="text-gray-400 italic">No fixtures generated.</p>
-              ) : (
-                <div className="space-y-3">
-                  {matches.slice(0, 10).map(match => (
-                    <div key={match.id} className="flex flex-col sm:flex-row items-center justify-between p-3 bg-gray-700/30 rounded-xl border border-gray-600/30 gap-2">
-                      <div className="flex-1 text-center sm:text-right font-semibold text-gray-200">{match.home_team?.name || 'TBD'}</div>
-                      <div className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-1 border border-gray-600">
-                        {match.status === 'completed' ? (
-                          <span className="font-bold text-yellow-400 text-lg">{match.home_score} - {match.away_score}</span>
-                        ) : (
-                          <>
-                            <input 
-                              type="number" 
-                              value={scoreInputs[match.id]?.home || ''}
-                              onChange={(e) => handleScoreChange(match.id, 'home', e.target.value)}
-                              className="w-12 bg-gray-800 text-white text-center rounded border border-gray-600 focus:border-green-500 outline-none" 
-                              placeholder="-" 
-                            />
-                            <span className="text-gray-400">:</span>
-                            <input 
-                              type="number" 
-                              value={scoreInputs[match.id]?.away || ''}
-                              onChange={(e) => handleScoreChange(match.id, 'away', e.target.value)}
-                              className="w-12 bg-gray-800 text-white text-center rounded border border-gray-600 focus:border-green-500 outline-none" 
-                              placeholder="-" 
-                            />
-                            <button onClick={() => handleSaveScore(match.id)} className="p-1 bg-green-600 hover:bg-green-500 rounded text-white ml-2 transition-colors"><Save className="w-4 h-4"/></button>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex-1 text-center sm:text-left font-semibold text-gray-200">{match.away_team?.name || 'TBD'}</div>
-                    </div>
-                  ))}
-                  {matches.length > 10 && (
-                    <button className="w-full py-2 text-blue-400 hover:text-blue-300 text-sm font-semibold mt-2 border border-blue-500/30 rounded-lg bg-blue-500/10">
-                      View all {matches.length} matches
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-            
-          </div>
-          
-          {/* Sidebar Area */}
-          <div className="space-y-6">
-            
-            {/* Standings Panel */}
-            <div className="bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700/50 shadow-xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Trophy className="w-6 h-6 text-yellow-500" />
-                  Standings
-                </h3>
-                <button className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">Recalculate</button>
-              </div>
-              {standings.length === 0 ? (
-                <p className="text-gray-400 italic">No standings available.</p>
-              ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-2">
-                  {standings.map((s, i) => (
-                    <div key={s.team_id} className={`flex items-center justify-between p-2 rounded-lg ${i < 4 ? 'bg-green-900/20 border border-green-500/30' : 'bg-gray-700/30'}`}>
-                      <div className="flex items-center gap-3">
-                        <span className={`font-bold ${i === 0 ? 'text-yellow-400' : 'text-gray-400'}`}>{i + 1}</span>
-                        <span className="font-semibold text-gray-200 text-sm truncate max-w-[120px]" title={s.team_name}>{s.team_name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">{s.played}P {s.gd > 0 ? `+${s.gd}` : s.gd}GD</span>
-                        <span className="font-bold text-white bg-gray-900 px-2 py-1 rounded min-w-[40px] text-center">{s.points}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Bracket Preview if Knockout */}
-            {divisionLeague.type === 'knockout' && (
-              <div className="bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700/50 shadow-xl">
-                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Flag className="w-6 h-6 text-purple-400" />
-                    Knockout Stage
-                  </h3>
-                </div>
-                {!bracket ? (
-                  <div className="text-center">
-                    <p className="text-gray-400 italic mb-4">Bracket not generated</p>
-                    <button className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold transition-colors">
-                      Generate Bracket
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-gray-300">Bracket ready! View full screen.</p>
-                )}
-              </div>
-            )}
-            
-          </div>
-        </div>
-      ) : null}
-    </motion.div>
+    </div>
   );
 
   return (
     <div className="min-h-[85vh] relative">
-      {/* Background decorations */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-green-600/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-yellow-600/10 blur-[120px]" />
-        <div className="absolute top-[40%] right-[10%] w-[30%] h-[30%] rounded-full bg-red-600/5 blur-[100px]" />
       </div>
 
       <div className="relative z-10 p-2 sm:p-4">
@@ -519,141 +287,134 @@ export default function CentralAdminPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`fixed top-20 right-10 z-50 px-6 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2 ${
+              className={`fixed top-20 right-10 z-50 px-6 py-3 rounded-xl shadow-2xl font-bold ${
                 message.type === 'error' ? 'bg-red-500/90 text-white' :
                 message.type === 'warning' ? 'bg-yellow-500/90 text-gray-900' :
                 'bg-green-500/90 text-white'
-              } backdrop-blur-md`}
-            >
+              } backdrop-blur-md`}>
               {message.text}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {loading && !tournaments.length ? (
+        {loading && !leagues.length ? (
           <div className="flex justify-center items-center h-64">
             <div className="w-16 h-16 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
           </div>
         ) : (
           <AnimatePresence mode="wait">
-            {!currentTournament ? (
-              <motion.div key="dashboard">
+            {!currentLeagueId ? (
+              <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 {renderDashboard()}
               </motion.div>
             ) : (
-              <motion.div key="tournament">
-                {renderTournamentView()}
+              <motion.div key="manage" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <div className="mb-4">
+                  <button onClick={() => { setCurrentLeagueId(null); loadData(true); }}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-gray-700/80 to-gray-800/80 hover:from-gray-600/80 hover:to-gray-700/80 text-gray-300 rounded-xl text-sm font-semibold transition-all border border-gray-600/50 shadow-lg">
+                    <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                  </button>
+                </div>
+                <TournamentManager leagueId={currentLeagueId} onBack={() => { setCurrentLeagueId(null); loadData(true); }} />
               </motion.div>
             )}
           </AnimatePresence>
         )}
       </div>
 
-      {/* --- MODALS --- */}
+      {/* Create Modal */}
       <AnimatePresence>
-        {showCreateModal && (
+        {showCreate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
-            >
+              className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-white">New Tournament</h3>
-                <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-white"><X className="w-6 h-6"/></button>
+                <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-white"><X className="w-6 h-6"/></button>
               </div>
-              <form onSubmit={handleCreateTournament} className="space-y-4">
+              <form onSubmit={handleCreate} className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Name</label>
-                  <input required type="text" value={tForm.name} onChange={e => setTForm({...tForm, name: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-green-500 outline-none" />
+                  <label className="block text-sm text-gray-400 mb-1">Name *</label>
+                  <input required type="text" value={createForm.name} onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-green-500 outline-none" placeholder="e.g. National League 2026" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Start Date</label>
-                    <input required type="date" value={tForm.start_date} onChange={e => setTForm({...tForm, start_date: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none [color-scheme:dark]" />
+                    <label className="block text-sm text-gray-400 mb-1">Division</label>
+                    <select value={createForm.gender} onChange={(e) => setCreateForm({...createForm, gender: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none">
+                      <option value="women">Ladies</option>
+                      <option value="men">Gents</option>
+                    </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">End Date</label>
-                    <input type="date" value={tForm.end_date} onChange={e => setTForm({...tForm, end_date: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none [color-scheme:dark]" />
+                    <label className="block text-sm text-gray-400 mb-1">Format</label>
+                    <select value={createForm.type} onChange={(e) => setCreateForm({...createForm, type: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none">
+                      <option value="league">League (Round Robin)</option>
+                      <option value="knockout">Groups + Knockout</option>
+                      <option value="knockout_only">Knockout Only</option>
+                      <option value="league_knockout">League + Knockout</option>
+                    </select>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Location</label>
-                  <input type="text" value={tForm.location} onChange={e => setTForm({...tForm, location: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
-                </div>
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-green-600 to-green-800 text-white rounded-xl font-bold mt-4 hover:from-green-500 hover:to-green-700">Create</button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-
-        {showLeagueModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-white">Create {currentDiv} League</h3>
-                <button onClick={() => setShowLeagueModal(false)} className="text-gray-400 hover:text-white"><X className="w-6 h-6"/></button>
-              </div>
-              <form onSubmit={handleCreateLeague} className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Format</label>
-                  <select value={lForm.type} onChange={e => setLForm({...lForm, type: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none">
-                    <option value="league">League (Round Robin)</option>
-                    <option value="knockout">Tournament (Groups + Knockout)</option>
-                  </select>
-                </div>
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Season</label>
+                    <input type="text" value={createForm.season || new Date().getFullYear().toString()} onChange={(e) => setCreateForm({...createForm, season: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
+                  </div>
                   <div>
                     <label className="block text-sm text-gray-400 mb-1">Max Teams</label>
-                    <input type="number" min="2" value={lForm.max_teams} onChange={e => setLForm({...lForm, max_teams: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
+                    <input type="number" min="2" value={createForm.max_teams} onChange={(e) => setCreateForm({...createForm, max_teams: +e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
                   </div>
-                  {lForm.type === 'knockout' && (
+                </div>
+                {(createForm.type === 'knockout' || createForm.type === 'league_knockout' || createForm.type === 'knockout_only') && (
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-gray-900/50 rounded-xl border border-purple-500/30">
+                    {createForm.type === 'knockout' && (
+                      <>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1">Groups</label>
+                          <input type="number" min="1" max="8" value={createForm.num_groups} onChange={(e) => setCreateForm({...createForm, num_groups: +e.target.value})}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1">Teams per Group</label>
+                          <input type="number" min="2" value={createForm.teams_per_group} onChange={(e) => setCreateForm({...createForm, teams_per_group: +e.target.value})}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
+                        </div>
+                      </>
+                    )}
+                    {createForm.type === 'league_knockout' && (
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Teams to Knockout</label>
+                        <input type="number" min="2" max="16" value={createForm.qualify_spots} onChange={(e) => setCreateForm({...createForm, qualify_spots: +e.target.value})}
+                          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
+                      </div>
+                    )}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Number of Groups</label>
-                      <input type="number" min="1" max="8" value={lForm.num_groups} onChange={e => setLForm({...lForm, num_groups: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none" />
+                      <label className="block text-sm text-gray-400 mb-1">Knockout Rounds</label>
+                      <select value={createForm.knockout_rounds} onChange={(e) => setCreateForm({...createForm, knockout_rounds: e.target.value})}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none">
+                        <option value="">Auto</option>
+                        <option value="round_of_16">Round of 16</option>
+                        <option value="quarter_finals">Quarter Finals</option>
+                        <option value="semi_finals">Semi Finals</option>
+                        <option value="finals">Finals Only</option>
+                      </select>
                     </div>
-                  )}
-                </div>
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl font-bold mt-4 hover:from-blue-500 hover:to-blue-700">Create League</button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-
-        {showTeamModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-white">Add Team</h3>
-                <button onClick={() => setShowTeamModal(false)} className="text-gray-400 hover:text-white"><X className="w-6 h-6"/></button>
-              </div>
-              <form onSubmit={handleAddTeam} className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Select Team</label>
-                  <select 
-                    value={teamForm.team_id} 
-                    onChange={e => setTeamForm({team_id: e.target.value})}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none"
-                    required
-                  >
-                    <option value="">-- Choose Team --</option>
-                    {allTeams.filter(t => t.gender === (currentDiv === 'Ladies' ? 'women' : 'men') || !t.gender).map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-green-600 to-green-800 text-white rounded-xl font-bold mt-4 hover:from-green-500 hover:to-green-700">Add to League</button>
+                  </div>
+                )}
+                <p className="text-xs text-blue-400 bg-blue-500/10 rounded-lg p-3">
+                  After creating, you can add teams with group assignments, generate fixtures, enter scores, and manage the full tournament.
+                </p>
+                <button type="submit" className="w-full py-3 bg-gradient-to-r from-green-600 to-green-800 text-white rounded-xl font-bold hover:from-green-500 hover:to-green-700">
+                  Create Tournament
+                </button>
               </form>
             </motion.div>
           </div>

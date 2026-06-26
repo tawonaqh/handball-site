@@ -138,8 +138,8 @@ export default function PressPage() {
                 For press inquiries, interview requests, or media credentials, please contact our communications team.
               </p>
               <div className="space-y-2 text-gray-700">
-                <p><strong>Email:</strong> press@handball263.co.zw</p>
-                <p><strong>Phone:</strong> +263 XX XXX XXXX</p>
+                <p><strong>Email:</strong> 263handball@gmail.com</p>
+                <p><strong>Phone:</strong> +263 78 251 9023</p>
               </div>
             </motion.div>
           </div>

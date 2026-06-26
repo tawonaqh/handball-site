@@ -9,11 +9,11 @@ class Team extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'gender', 'league_id', 'group_label', 'logo_url'];
+    protected $fillable = ['name', 'gender', 'group_label', 'logo_url'];
 
-    public function league()
+    public function leagues()
     {
-        return $this->belongsTo(League::class);
+        return $this->belongsToMany(League::class, 'league_team')->withPivot('group_label')->withTimestamps();
     }
 
     public function players()

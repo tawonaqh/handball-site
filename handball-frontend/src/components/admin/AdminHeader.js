@@ -115,7 +115,7 @@ export default function AdminHeader({ onMenuClick, sidebarCollapsed }) {
                     </div>
                     <div>
                       <div className="text-sm font-medium text-white">Admin User</div>
-                      <div className="text-xs text-gray-400">admin@handball263.com</div>
+                      <div className="text-xs text-gray-400">263handball@gmail.com</div>
                     </div>
                   </div>
                 </div>

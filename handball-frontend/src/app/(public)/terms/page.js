@@ -110,7 +110,7 @@ export default function TermsPage() {
                 If you have any questions about these Terms of Service, please contact us at:
               </p>
               <p className="text-gray-700 font-medium">
-                Email: legal@handball263.co.zw
+                Email: 263handball@gmail.com
               </p>
             </div>
           </motion.div>

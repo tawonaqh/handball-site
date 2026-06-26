@@ -10,14 +10,12 @@ class TeamController extends Controller
 {
     public function index()
     {
-        // Load league, tournament, and ranking relationships
-        return Team::with(['league.tournament', 'ranking'])->get();
+        return Team::with(['leagues', 'ranking'])->get();
     }
 
     public function show($id)
     {
-        // Load players, league, and ranking for a single team
-        return Team::with(['players', 'league', 'ranking'])->findOrFail($id);
+        return Team::with(['players', 'leagues', 'ranking'])->findOrFail($id);
     }
 
     public function store(Request $request)

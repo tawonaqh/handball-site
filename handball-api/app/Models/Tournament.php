@@ -9,12 +9,7 @@ class Tournament extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'start_date', 'end_date'];
-
-    public function teams()
-    {
-        return $this->hasMany(Team::class);
-    }
+    protected $fillable = ['name', 'start_date', 'end_date', 'location'];
 
     public function leagues()
     {

@@ -53,12 +53,16 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full -translate-x-48 -translate-y-48" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-500/10 to-transparent rounded-full translate-x-48 translate-y-48" />
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-br from-purple-500/5 to-transparent rounded-full -translate-x-32 -translate-y-32" />
+        {/* Floating orbs */}
+        <div className="absolute top-1/4 right-1/4 w-4 h-4 bg-orange-500/20 rounded-full animate-float" />
+        <div className="absolute bottom-1/3 left-1/4 w-3 h-3 bg-blue-500/20 rounded-full animate-float" style={{ animationDelay: "1.5s" }} />
+        <div className="absolute top-1/3 right-1/3 w-5 h-5 bg-purple-500/15 rounded-full animate-float" style={{ animationDelay: "3s" }} />
       </div>
 
       <motion.div
@@ -137,7 +141,7 @@ export default function AdminLogin() {
                   onChange={handleChange}
                   required
                   className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-300"
-                  placeholder="admin or admin@handball263.com"
+                  placeholder="admin or 263handball@gmail.com"
                 />
               </div>
             </motion.div>

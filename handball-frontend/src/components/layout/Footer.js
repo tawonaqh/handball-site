@@ -97,11 +97,11 @@ export default function Footer() {
             >
               <div className="flex items-center space-x-3 text-gray-300">
                 <FaEnvelope className="w-4 h-4 text-orange-400" />
-                <span>info@handball263.com</span>
+                <span>263handball@gmail.com</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-300">
                 <FaPhone className="w-4 h-4 text-orange-400" />
-                <span>+263 123 456 789</span>
+                <span>+263 78 251 9023</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-300">
                 <FaMapMarkerAlt className="w-4 h-4 text-orange-400" />

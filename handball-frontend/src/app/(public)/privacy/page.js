@@ -98,7 +98,7 @@ export default function PrivacyPage() {
               If you have any questions about this Privacy Policy, please contact us at:
             </p>
             <p className="text-gray-700 font-medium">
-              Email: privacy@handball263.co.zw
+              Email: 263handball@gmail.com
             </p>
           </motion.div>
         </div>
